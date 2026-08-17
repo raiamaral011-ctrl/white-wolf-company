@@ -20,7 +20,7 @@ export const CATEGORIES: Category[] = [
 export const MOCK_PRODUCTS: Product[] = [
   // ADIDAS
   {
-    id: 'p1000000-0000-0000-0000-000000000001',
+    id: 'a1000000-0000-0000-0000-000000000001',
     brand_id: BRANDS[0].id,
     category_id: CATEGORIES[0].id,
     brand: BRANDS[0],
@@ -41,20 +41,20 @@ export const MOCK_PRODUCTS: Product[] = [
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     images: [
-      { id: 'img-1', product_id: 'p1000000-0000-0000-0000-000000000001', url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80', alt: 'Tênis Ultraboost Light', sort_order: 1, created_at: '' },
-      { id: 'img-2', product_id: 'p1000000-0000-0000-0000-000000000001', url: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=800&auto=format&fit=crop&q=80', alt: 'Solado Ultraboost', sort_order: 2, created_at: '' }
+      { id: 'img-1', product_id: 'a1000000-0000-0000-0000-000000000001', url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80', alt: 'Tênis Ultraboost Light', sort_order: 1, created_at: '' },
+      { id: 'img-2', product_id: 'a1000000-0000-0000-0000-000000000001', url: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=800&auto=format&fit=crop&q=80', alt: 'Solado Ultraboost', sort_order: 2, created_at: '' }
     ],
     variants: [
-      { id: 'v1-38', product_id: 'p1000000-0000-0000-0000-000000000001', sku: 'ADI-UB-01-38', size: '38', color: '#0f172a', color_name: 'Preto/Vermelho Neon', stock: 12, created_at: '', updated_at: '' },
-      { id: 'v1-39', product_id: 'p1000000-0000-0000-0000-000000000001', sku: 'ADI-UB-01-39', size: '39', color: '#0f172a', color_name: 'Preto/Vermelho Neon', stock: 15, created_at: '', updated_at: '' },
-      { id: 'v1-40', product_id: 'p1000000-0000-0000-0000-000000000001', sku: 'ADI-UB-01-40', size: '40', color: '#0f172a', color_name: 'Preto/Vermelho Neon', stock: 20, created_at: '', updated_at: '' },
-      { id: 'v1-41', product_id: 'p1000000-0000-0000-0000-000000000001', sku: 'ADI-UB-01-41', size: '41', color: '#0f172a', color_name: 'Preto/Vermelho Neon', stock: 18, created_at: '', updated_at: '' },
-      { id: 'v1-42', product_id: 'p1000000-0000-0000-0000-000000000001', sku: 'ADI-UB-01-42', size: '42', color: '#0f172a', color_name: 'Preto/Vermelho Neon', stock: 8, created_at: '', updated_at: '' },
-      { id: 'v1-43', product_id: 'p1000000-0000-0000-0000-000000000001', sku: 'ADI-UB-01-43', size: '43', color: '#0f172a', color_name: 'Preto/Vermelho Neon', stock: 5, created_at: '', updated_at: '' }
+      { id: 'v1-38', product_id: 'a1000000-0000-0000-0000-000000000001', sku: 'ADI-UB-01-38', size: '38', color: '#0f172a', color_name: 'Preto/Vermelho Neon', stock: 12, created_at: '', updated_at: '' },
+      { id: 'v1-39', product_id: 'a1000000-0000-0000-0000-000000000001', sku: 'ADI-UB-01-39', size: '39', color: '#0f172a', color_name: 'Preto/Vermelho Neon', stock: 15, created_at: '', updated_at: '' },
+      { id: 'v1-40', product_id: 'a1000000-0000-0000-0000-000000000001', sku: 'ADI-UB-01-40', size: '40', color: '#0f172a', color_name: 'Preto/Vermelho Neon', stock: 20, created_at: '', updated_at: '' },
+      { id: 'v1-41', product_id: 'a1000000-0000-0000-0000-000000000001', sku: 'ADI-UB-01-41', size: '41', color: '#0f172a', color_name: 'Preto/Vermelho Neon', stock: 18, created_at: '', updated_at: '' },
+      { id: 'v1-42', product_id: 'a1000000-0000-0000-0000-000000000001', sku: 'ADI-UB-01-42', size: '42', color: '#0f172a', color_name: 'Preto/Vermelho Neon', stock: 8, created_at: '', updated_at: '' },
+      { id: 'v1-43', product_id: 'a1000000-0000-0000-0000-000000000001', sku: 'ADI-UB-01-43', size: '43', color: '#0f172a', color_name: 'Preto/Vermelho Neon', stock: 5, created_at: '', updated_at: '' }
     ]
   },
   {
-    id: 'p1000000-0000-0000-0000-000000000002',
+    id: 'a1000000-0000-0000-0000-000000000002',
     brand_id: BRANDS[0].id,
     category_id: CATEGORIES[0].id,
     brand: BRANDS[0],
@@ -73,15 +73,15 @@ export const MOCK_PRODUCTS: Product[] = [
     review_count: 94,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    images: [{ id: 'img-3', product_id: 'p1000000-0000-0000-0000-000000000002', url: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800&auto=format&fit=crop&q=80', alt: 'Adizero Boston 12', sort_order: 1, created_at: '' }],
+    images: [{ id: 'img-3', product_id: 'a1000000-0000-0000-0000-000000000002', url: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800&auto=format&fit=crop&q=80', alt: 'Adizero Boston 12', sort_order: 1, created_at: '' }],
     variants: [
-      { id: 'v2-40', product_id: 'p1000000-0000-0000-0000-000000000002', sku: 'ADI-AZ-02-40', size: '40', color: '#22c55e', color_name: 'Verde Volt', stock: 10, created_at: '', updated_at: '' },
-      { id: 'v2-41', product_id: 'p1000000-0000-0000-0000-000000000002', sku: 'ADI-AZ-02-41', size: '41', color: '#22c55e', color_name: 'Verde Volt', stock: 14, created_at: '', updated_at: '' }
+      { id: 'v2-40', product_id: 'a1000000-0000-0000-0000-000000000002', sku: 'ADI-AZ-02-40', size: '40', color: '#22c55e', color_name: 'Verde Volt', stock: 10, created_at: '', updated_at: '' },
+      { id: 'v2-41', product_id: 'a1000000-0000-0000-0000-000000000002', sku: 'ADI-AZ-02-41', size: '41', color: '#22c55e', color_name: 'Verde Volt', stock: 14, created_at: '', updated_at: '' }
     ]
   },
   // NIKE
   {
-    id: 'p1000000-0000-0000-0000-000000000011',
+    id: 'a1000000-0000-0000-0000-000000000011',
     brand_id: BRANDS[1].id,
     category_id: CATEGORIES[0].id,
     brand: BRANDS[1],
@@ -101,15 +101,15 @@ export const MOCK_PRODUCTS: Product[] = [
     review_count: 340,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    images: [{ id: 'img-11', product_id: 'p1000000-0000-0000-0000-000000000011', url: 'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=800&auto=format&fit=crop&q=80', alt: 'Air Zoom Alphafly', sort_order: 1, created_at: '' }],
+    images: [{ id: 'img-11', product_id: 'a1000000-0000-0000-0000-000000000011', url: 'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=800&auto=format&fit=crop&q=80', alt: 'Air Zoom Alphafly', sort_order: 1, created_at: '' }],
     variants: [
-      { id: 'v11-39', product_id: 'p1000000-0000-0000-0000-000000000011', sku: 'NIK-AF-11-39', size: '39', color: '#e11d48', color_name: 'Laranja Elétrico', stock: 8, created_at: '', updated_at: '' },
-      { id: 'v11-40', product_id: 'p1000000-0000-0000-0000-000000000011', sku: 'NIK-AF-11-40', size: '40', color: '#e11d48', color_name: 'Laranja Elétrico', stock: 15, created_at: '', updated_at: '' },
-      { id: 'v11-41', product_id: 'p1000000-0000-0000-0000-000000000011', sku: 'NIK-AF-11-41', size: '41', color: '#e11d48', color_name: 'Laranja Elétrico', stock: 12, created_at: '', updated_at: '' }
+      { id: 'v11-39', product_id: 'a1000000-0000-0000-0000-000000000011', sku: 'NIK-AF-11-39', size: '39', color: '#e11d48', color_name: 'Laranja Elétrico', stock: 8, created_at: '', updated_at: '' },
+      { id: 'v11-40', product_id: 'a1000000-0000-0000-0000-000000000011', sku: 'NIK-AF-11-40', size: '40', color: '#e11d48', color_name: 'Laranja Elétrico', stock: 15, created_at: '', updated_at: '' },
+      { id: 'v11-41', product_id: 'a1000000-0000-0000-0000-000000000011', sku: 'NIK-AF-11-41', size: '41', color: '#e11d48', color_name: 'Laranja Elétrico', stock: 12, created_at: '', updated_at: '' }
     ]
   },
   {
-    id: 'p1000000-0000-0000-0000-000000000012',
+    id: 'a1000000-0000-0000-0000-000000000012',
     brand_id: BRANDS[1].id,
     category_id: CATEGORIES[0].id,
     brand: BRANDS[1],
@@ -129,15 +129,15 @@ export const MOCK_PRODUCTS: Product[] = [
     review_count: 450,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    images: [{ id: 'img-12', product_id: 'p1000000-0000-0000-0000-000000000012', url: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=800&auto=format&fit=crop&q=80', alt: 'Pegasus 40', sort_order: 1, created_at: '' }],
+    images: [{ id: 'img-12', product_id: 'a1000000-0000-0000-0000-000000000012', url: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=800&auto=format&fit=crop&q=80', alt: 'Pegasus 40', sort_order: 1, created_at: '' }],
     variants: [
-      { id: 'v12-36', product_id: 'p1000000-0000-0000-0000-000000000012', sku: 'NIK-PG-12-36', size: '36', color: '#38bdf8', color_name: 'Azul Celeste', stock: 10, created_at: '', updated_at: '' },
-      { id: 'v12-37', product_id: 'p1000000-0000-0000-0000-000000000012', sku: 'NIK-PG-12-37', size: '37', color: '#38bdf8', color_name: 'Azul Celeste', stock: 14, created_at: '', updated_at: '' }
+      { id: 'v12-36', product_id: 'a1000000-0000-0000-0000-000000000012', sku: 'NIK-PG-12-36', size: '36', color: '#38bdf8', color_name: 'Azul Celeste', stock: 10, created_at: '', updated_at: '' },
+      { id: 'v12-37', product_id: 'a1000000-0000-0000-0000-000000000012', sku: 'NIK-PG-12-37', size: '37', color: '#38bdf8', color_name: 'Azul Celeste', stock: 14, created_at: '', updated_at: '' }
     ]
   },
   // ASICS
   {
-    id: 'p1000000-0000-0000-0000-000000000021',
+    id: 'a1000000-0000-0000-0000-000000000021',
     brand_id: BRANDS[2].id,
     category_id: CATEGORIES[0].id,
     brand: BRANDS[2],
@@ -157,15 +157,15 @@ export const MOCK_PRODUCTS: Product[] = [
     review_count: 230,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    images: [{ id: 'img-21', product_id: 'p1000000-0000-0000-0000-000000000021', url: 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=800&auto=format&fit=crop&q=80', alt: 'GEL-Nimbus 26', sort_order: 1, created_at: '' }],
+    images: [{ id: 'img-21', product_id: 'a1000000-0000-0000-0000-000000000021', url: 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=800&auto=format&fit=crop&q=80', alt: 'GEL-Nimbus 26', sort_order: 1, created_at: '' }],
     variants: [
-      { id: 'v21-40', product_id: 'p1000000-0000-0000-0000-000000000021', sku: 'ASC-NM-21-40', size: '40', color: '#6366f1', color_name: 'Índigo Tech', stock: 15, created_at: '', updated_at: '' },
-      { id: 'v21-41', product_id: 'p1000000-0000-0000-0000-000000000021', sku: 'ASC-NM-21-41', size: '41', color: '#6366f1', color_name: 'Índigo Tech', stock: 20, created_at: '', updated_at: '' }
+      { id: 'v21-40', product_id: 'a1000000-0000-0000-0000-000000000021', sku: 'ASC-NM-21-40', size: '40', color: '#6366f1', color_name: 'Índigo Tech', stock: 15, created_at: '', updated_at: '' },
+      { id: 'v21-41', product_id: 'a1000000-0000-0000-0000-000000000021', sku: 'ASC-NM-21-41', size: '41', color: '#6366f1', color_name: 'Índigo Tech', stock: 20, created_at: '', updated_at: '' }
     ]
   },
   // PUMA
   {
-    id: 'p1000000-0000-0000-0000-000000000031',
+    id: 'a1000000-0000-0000-0000-000000000031',
     brand_id: BRANDS[3].id,
     category_id: CATEGORIES[0].id,
     brand: BRANDS[3],
@@ -185,14 +185,14 @@ export const MOCK_PRODUCTS: Product[] = [
     review_count: 110,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    images: [{ id: 'img-31', product_id: 'p1000000-0000-0000-0000-000000000031', url: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=800&auto=format&fit=crop&q=80', alt: 'Deviate Nitro Elite', sort_order: 1, created_at: '' }],
+    images: [{ id: 'img-31', product_id: 'a1000000-0000-0000-0000-000000000031', url: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=800&auto=format&fit=crop&q=80', alt: 'Deviate Nitro Elite', sort_order: 1, created_at: '' }],
     variants: [
-      { id: 'v31-41', product_id: 'p1000000-0000-0000-0000-000000000031', sku: 'PUM-DN-31-41', size: '41', color: '#f97316', color_name: 'Laranja Solar', stock: 12, created_at: '', updated_at: '' }
+      { id: 'v31-41', product_id: 'a1000000-0000-0000-0000-000000000031', sku: 'PUM-DN-31-41', size: '41', color: '#f97316', color_name: 'Laranja Solar', stock: 12, created_at: '', updated_at: '' }
     ]
   },
   // NEW BALANCE
   {
-    id: 'p1000000-0000-0000-0000-000000000041',
+    id: 'a1000000-0000-0000-0000-000000000041',
     brand_id: BRANDS[4].id,
     category_id: CATEGORIES[0].id,
     brand: BRANDS[4],
@@ -212,13 +212,13 @@ export const MOCK_PRODUCTS: Product[] = [
     review_count: 175,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    images: [{ id: 'img-41', product_id: 'p1000000-0000-0000-0000-000000000041', url: 'https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?w=800&auto=format&fit=crop&q=80', alt: 'Fresh Foam X More', sort_order: 1, created_at: '' }],
+    images: [{ id: 'img-41', product_id: 'a1000000-0000-0000-0000-000000000041', url: 'https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?w=800&auto=format&fit=crop&q=80', alt: 'Fresh Foam X More', sort_order: 1, created_at: '' }],
     variants: [
-      { id: 'v41-40', product_id: 'p1000000-0000-0000-0000-000000000041', sku: 'NB-FF-41-40', size: '40', color: '#0284c7', color_name: 'Cinza/Azul Marinho', stock: 14, created_at: '', updated_at: '' }
+      { id: 'v41-40', product_id: 'a1000000-0000-0000-0000-000000000041', sku: 'NB-FF-41-40', size: '40', color: '#0284c7', color_name: 'Cinza/Azul Marinho', stock: 14, created_at: '', updated_at: '' }
     ]
   },
   {
-    id: 'p1000000-0000-0000-0000-000000000042',
+    id: 'a1000000-0000-0000-0000-000000000042',
     brand_id: BRANDS[4].id,
     category_id: CATEGORIES[0].id,
     brand: BRANDS[4],
@@ -237,14 +237,14 @@ export const MOCK_PRODUCTS: Product[] = [
     review_count: 410,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    images: [{ id: 'img-42', product_id: 'p1000000-0000-0000-0000-000000000042', url: 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=800&auto=format&fit=crop&q=80', alt: 'NB 550 Vintage White', sort_order: 1, created_at: '' }],
+    images: [{ id: 'img-42', product_id: 'a1000000-0000-0000-0000-000000000042', url: 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=800&auto=format&fit=crop&q=80', alt: 'NB 550 Vintage White', sort_order: 1, created_at: '' }],
     variants: [
-      { id: 'v42-41', product_id: 'p1000000-0000-0000-0000-000000000042', sku: 'NB-550-42-41', size: '41', color: '#ffffff', color_name: 'Branco Vintage', stock: 25, created_at: '', updated_at: '' }
+      { id: 'v42-41', product_id: 'a1000000-0000-0000-0000-000000000042', sku: 'NB-550-42-41', size: '41', color: '#ffffff', color_name: 'Branco Vintage', stock: 25, created_at: '', updated_at: '' }
     ]
   },
   // APPAREL & ACCESSORIES
   {
-    id: 'p1000000-0000-0000-0000-000000000004',
+    id: 'a1000000-0000-0000-0000-000000000004',
     brand_id: BRANDS[0].id,
     category_id: CATEGORIES[1].id,
     brand: BRANDS[0],
@@ -263,14 +263,14 @@ export const MOCK_PRODUCTS: Product[] = [
     review_count: 45,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    images: [{ id: 'img-4', product_id: 'p1000000-0000-0000-0000-000000000004', url: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80', alt: 'Camiseta Own The Run', sort_order: 1, created_at: '' }],
+    images: [{ id: 'img-4', product_id: 'a1000000-0000-0000-0000-000000000004', url: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80', alt: 'Camiseta Own The Run', sort_order: 1, created_at: '' }],
     variants: [
-      { id: 'v4-M', product_id: 'p1000000-0000-0000-0000-000000000004', sku: 'ADI-TS-04-M', size: 'M', color: '#0f172a', color_name: 'Preto', stock: 15, created_at: '', updated_at: '' },
-      { id: 'v4-G', product_id: 'p1000000-0000-0000-0000-000000000004', sku: 'ADI-TS-04-G', size: 'G', color: '#0f172a', color_name: 'Preto', stock: 20, created_at: '', updated_at: '' }
+      { id: 'v4-M', product_id: 'a1000000-0000-0000-0000-000000000004', sku: 'ADI-TS-04-M', size: 'M', color: '#0f172a', color_name: 'Preto', stock: 15, created_at: '', updated_at: '' },
+      { id: 'v4-G', product_id: 'a1000000-0000-0000-0000-000000000004', sku: 'ADI-TS-04-G', size: 'G', color: '#0f172a', color_name: 'Preto', stock: 20, created_at: '', updated_at: '' }
     ]
   },
   {
-    id: 'p1000000-0000-0000-0000-000000000007',
+    id: 'a1000000-0000-0000-0000-000000000007',
     brand_id: BRANDS[0].id,
     category_id: CATEGORIES[4].id,
     brand: BRANDS[0],
@@ -290,13 +290,13 @@ export const MOCK_PRODUCTS: Product[] = [
     review_count: 77,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    images: [{ id: 'img-7', product_id: 'p1000000-0000-0000-0000-000000000007', url: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=800&auto=format&fit=crop&q=80', alt: 'Jaqueta Corta-Vento', sort_order: 1, created_at: '' }],
+    images: [{ id: 'img-7', product_id: 'a1000000-0000-0000-0000-000000000007', url: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=800&auto=format&fit=crop&q=80', alt: 'Jaqueta Corta-Vento', sort_order: 1, created_at: '' }],
     variants: [
-      { id: 'v7-P', product_id: 'p1000000-0000-0000-0000-000000000007', sku: 'ADI-JK-07-P', size: 'P', color: '#0f172a', color_name: 'Preto', stock: 8, created_at: '', updated_at: '' }
+      { id: 'v7-P', product_id: 'a1000000-0000-0000-0000-000000000007', sku: 'ADI-JK-07-P', size: 'P', color: '#0f172a', color_name: 'Preto', stock: 8, created_at: '', updated_at: '' }
     ]
   },
   {
-    id: 'p1000000-0000-0000-0000-000000000008',
+    id: 'a1000000-0000-0000-0000-000000000008',
     brand_id: BRANDS[0].id,
     category_id: CATEGORIES[5].id,
     brand: BRANDS[0],
@@ -315,9 +315,9 @@ export const MOCK_PRODUCTS: Product[] = [
     review_count: 39,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    images: [{ id: 'img-8', product_id: 'p1000000-0000-0000-0000-000000000008', url: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80', alt: 'Mochila Training Pro', sort_order: 1, created_at: '' }],
+    images: [{ id: 'img-8', product_id: 'a1000000-0000-0000-0000-000000000008', url: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80', alt: 'Mochila Training Pro', sort_order: 1, created_at: '' }],
     variants: [
-      { id: 'v8-U', product_id: 'p1000000-0000-0000-0000-000000000008', sku: 'ADI-BP-08-U', size: 'Único', color: '#0f172a', color_name: 'Preto Grafite', stock: 30, created_at: '', updated_at: '' }
+      { id: 'v8-U', product_id: 'a1000000-0000-0000-0000-000000000008', sku: 'ADI-BP-08-U', size: 'Único', color: '#0f172a', color_name: 'Preto Grafite', stock: 30, created_at: '', updated_at: '' }
     ]
   }
 ];
