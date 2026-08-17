@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { MOCK_PRODUCTS, BRANDS } from '@/lib/data/products';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://whitewolfco.com.br';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://white-wolf-company-758y.vercel.app';
 
   const routes = [
     '',

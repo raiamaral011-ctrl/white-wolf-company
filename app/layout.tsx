@@ -4,6 +4,7 @@ import { CartProvider } from '@/context/cart-context';
 import { FavoritesProvider } from '@/context/favorites-context';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://white-wolf-company-758y.vercel.app'),
   title: 'WHITE WOLF COMPANY | Tênis, Roupas e Acessórios Esportivos',
   description: 'Plataforma premium de e-commerce esportivo. Compre tênis e roupas de alta performance das marcas Adidas, Nike, ASICS, Puma e New Balance.',
   keywords: ['e-commerce esportivo', 'tênis de corrida', 'adidas', 'nike', 'asics', 'puma', 'new balance', 'white wolf company'],
