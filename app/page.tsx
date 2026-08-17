@@ -6,13 +6,41 @@ import { BrandShowcase } from '@/components/home/BrandShowcase';
 import { CategoryGrid } from '@/components/home/CategoryGrid';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { MOCK_PRODUCTS } from '@/lib/data/products';
+import { Product } from '@/types';
 import Link from 'next/link';
 import { ArrowRight, Flame, Sparkles, Tag } from 'lucide-react';
 
-export default function HomePage() {
-  const featuredProducts = MOCK_PRODUCTS.filter((p) => p.featured);
-  const newProducts = MOCK_PRODUCTS.filter((p) => p.is_new);
-  const saleProducts = MOCK_PRODUCTS.filter((p) => p.is_sale);
+async function getLiveProducts(): Promise<Product[]> {
+  try {
+    const { createAdminClient } = await import('@/lib/supabase/admin');
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        brand:brands(*),
+        category:categories(*),
+        images:product_images(*),
+        variants:product_variants(*)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (!error && data && data.length > 0) {
+      return data as Product[];
+    }
+  } catch (err) {
+    console.error('Homepage Supabase fetch failed, using mock data:', err);
+  }
+  return MOCK_PRODUCTS;
+}
+
+export default async function HomePage() {
+  const allProducts = await getLiveProducts();
+
+  const featuredProducts = allProducts.filter((p) => p.featured);
+  const newProducts = allProducts.filter((p) => p.is_new);
+  const adidasProducts = allProducts.filter((p) => p.brand?.slug === 'adidas');
+  const nikeProducts = allProducts.filter((p) => p.brand?.slug === 'nike');
 
   return (
     <div className="min-h-screen bg-wolf-950 text-white flex flex-col font-sans">
@@ -46,7 +74,7 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <ProductGrid products={featuredProducts.slice(0, 4)} />
+            <ProductGrid products={(featuredProducts.length > 0 ? featuredProducts : allProducts).slice(0, 4)} />
           </div>
         </section>
 
@@ -93,38 +121,42 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <ProductGrid products={newProducts.slice(0, 4)} />
+            <ProductGrid products={(newProducts.length > 0 ? newProducts : allProducts).slice(0, 4)} />
           </div>
         </section>
 
-        {/* PRODUTOS POR MARCA SPECIFIC SPOTLIGHTS */}
+        {/* PRODUTOS POR MARCA SPOTLIGHTS */}
         <section className="py-20 bg-wolf-950 border-b border-wolf-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
             {/* ADIDAS SPOTLIGHT */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-wolf-800">
-                <h3 className="text-2xl font-black uppercase font-heading text-white tracking-wider flex items-center gap-3">
-                  PRODUTOS <span className="text-accent">ADIDAS</span>
-                </h3>
-                <Link href="/marca/adidas" className="text-xs font-mono text-wolf-400 hover:text-white uppercase">
-                  VER ADIDAS →
-                </Link>
+            {adidasProducts.length > 0 && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between pb-4 border-b border-wolf-800">
+                  <h3 className="text-2xl font-black uppercase font-heading text-white tracking-wider flex items-center gap-3">
+                    PRODUTOS <span className="text-accent">ADIDAS</span>
+                  </h3>
+                  <Link href="/marca/adidas" className="text-xs font-mono text-wolf-400 hover:text-white uppercase">
+                    VER ADIDAS →
+                  </Link>
+                </div>
+                <ProductGrid products={adidasProducts.slice(0, 4)} />
               </div>
-              <ProductGrid products={MOCK_PRODUCTS.filter((p) => p.brand?.slug === 'adidas').slice(0, 4)} />
-            </div>
+            )}
 
             {/* NIKE SPOTLIGHT */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-wolf-800">
-                <h3 className="text-2xl font-black uppercase font-heading text-white tracking-wider flex items-center gap-3">
-                  PRODUTOS <span className="text-accent">NIKE</span>
-                </h3>
-                <Link href="/marca/nike" className="text-xs font-mono text-wolf-400 hover:text-white uppercase">
-                  VER NIKE →
-                </Link>
+            {nikeProducts.length > 0 && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between pb-4 border-b border-wolf-800">
+                  <h3 className="text-2xl font-black uppercase font-heading text-white tracking-wider flex items-center gap-3">
+                    PRODUTOS <span className="text-accent">NIKE</span>
+                  </h3>
+                  <Link href="/marca/nike" className="text-xs font-mono text-wolf-400 hover:text-white uppercase">
+                    VER NIKE →
+                  </Link>
+                </div>
+                <ProductGrid products={nikeProducts.slice(0, 4)} />
               </div>
-              <ProductGrid products={MOCK_PRODUCTS.filter((p) => p.brand?.slug === 'nike').slice(0, 4)} />
-            </div>
+            )}
           </div>
         </section>
       </main>
