@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       featured,
       is_new,
       is_sale,
-      image_url,
+      media,
       variants,
     } = body;
 
@@ -96,14 +96,26 @@ export async function POST(req: Request) {
 
     const productId = newProd.id;
 
-    // 2. Insert image
-    const finalImageUrl = image_url?.trim() || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80';
-    await supabase.from('product_images').insert({
+    // 2. Insert media items (images and videos)
+    const mediaList = Array.isArray(media) && media.length > 0 ? media : [];
+    const mediaRows = mediaList.map((m: any, idx: number) => ({
       product_id: productId,
-      url: finalImageUrl,
-      alt: name,
-      sort_order: 1,
-    });
+      url: m.url,
+      alt: m.type || 'image',
+      sort_order: idx + 1,
+    }));
+
+    if (mediaRows.length > 0) {
+      await supabase.from('product_images').insert(mediaRows);
+    } else {
+      // Fallback standard image
+      await supabase.from('product_images').insert({
+        product_id: productId,
+        url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80',
+        alt: 'image',
+        sort_order: 1,
+      });
+    }
 
     // 3. Insert variants with initial stock
     const variantList = Array.isArray(variants) && variants.length > 0
@@ -146,16 +158,25 @@ export async function POST(req: Request) {
       review_count: 1,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      images: [
-        {
-          id: 'img-' + Date.now(),
-          product_id: productId,
-          url: finalImageUrl,
-          alt: name,
-          sort_order: 1,
-          created_at: new Date().toISOString(),
-        },
-      ],
+      images: mediaRows.length > 0
+        ? mediaRows.map((mr, idx) => ({
+            id: 'img-' + Date.now() + '-' + idx,
+            product_id: productId,
+            url: mr.url,
+            alt: mr.alt,
+            sort_order: mr.sort_order,
+            created_at: new Date().toISOString(),
+          }))
+        : [
+            {
+              id: 'img-' + Date.now(),
+              product_id: productId,
+              url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80',
+              alt: 'image',
+              sort_order: 1,
+              created_at: new Date().toISOString(),
+            },
+          ],
       variants: variantRows.map((vr, i) => ({
         id: 'var-' + Date.now() + '-' + i,
         product_id: productId,

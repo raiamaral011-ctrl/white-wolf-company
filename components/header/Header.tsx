@@ -97,6 +97,10 @@ export function Header() {
             MARCAS
           </Link>
 
+          <Link href="/maratona" className="text-emerald-400 font-extrabold hover:text-emerald-300 transition-colors">
+            MARATONA
+          </Link>
+
           <Link href="/ofertas" className="text-accent font-extrabold hover:text-rose-400 transition-colors flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
             OFERTAS
@@ -177,6 +181,10 @@ export function Header() {
 
           <Link href="/marcas" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 border-b border-wolf-800 text-white">
             Marcas
+          </Link>
+
+          <Link href="/maratona" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 border-b border-wolf-800 text-emerald-400 font-extrabold">
+            🏃 Maratona
           </Link>
 
           <Link href="/ofertas" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-accent font-extrabold">

@@ -11,7 +11,7 @@ import { formatCurrency, calculateInstallments } from '@/lib/utils';
 import { useCart } from '@/context/cart-context';
 import { useFavorites } from '@/context/favorites-context';
 import { Product, ProductVariant } from '@/types';
-import { Heart, ShoppingBag, Truck, ShieldCheck, RefreshCw, Star, Ruler, Check, ChevronRight, AlertTriangle, AlertCircle } from 'lucide-react';
+import { Heart, ShoppingBag, Truck, ShieldCheck, RefreshCw, Star, Ruler, Check, ChevronRight, AlertTriangle, AlertCircle, Film } from 'lucide-react';
 
 interface ProductPageProps {
   params: {
@@ -143,19 +143,31 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         <div className="lg:col-span-7 space-y-4">
           {/* Main Large Display */}
           <div className="relative aspect-square bg-wolf-900 border border-wolf-800 rounded-sm overflow-hidden shadow-2xl">
-            <Image
-              src={images[selectedImage]?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800'}
-              alt={product.name}
-              fill
-              priority
-              className={`object-cover ${isEntirelyOutOfStock ? 'grayscale-[40%]' : ''}`}
-            />
+            { (images[selectedImage]?.alt === 'video' || images[selectedImage]?.url.match(/\.(mp4|webm|ogg)(\?.*)?$/i)) ? (
+              <video
+                src={images[selectedImage]?.url}
+                className="w-full h-full object-cover"
+                controls
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            ) : (
+              <Image
+                src={images[selectedImage]?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800'}
+                alt={product.name}
+                fill
+                priority
+                className={`object-cover ${isEntirelyOutOfStock ? 'grayscale-[40%]' : ''}`}
+              />
+            )}
             {isEntirelyOutOfStock ? (
-              <span className="absolute top-4 left-4 bg-rose-600 text-white font-mono font-black text-xs px-3 py-1.5 uppercase tracking-widest rounded-xs flex items-center gap-1.5 shadow-xl">
+              <span className="absolute top-4 left-4 bg-rose-600 text-white font-mono font-black text-xs px-3 py-1.5 uppercase tracking-widest rounded-xs flex items-center gap-1.5 shadow-xl z-20">
                 <AlertTriangle className="w-4 h-4" /> PRODUTO ESGOTADO
               </span>
             ) : discountPercent ? (
-              <span className="absolute top-4 left-4 bg-emerald-500 text-wolf-950 font-mono font-black text-xs px-3 py-1 uppercase tracking-widest rounded-xs">
+              <span className="absolute top-4 left-4 bg-emerald-500 text-wolf-950 font-mono font-black text-xs px-3 py-1 uppercase tracking-widest rounded-xs z-20">
                 -{discountPercent}% OFF
               </span>
             ) : null}
@@ -172,7 +184,16 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                     selectedImage === idx ? 'border-accent ring-2 ring-rose-600/30' : 'border-wolf-800 opacity-60 hover:opacity-100'
                   }`}
                 >
-                  <Image src={img.url} alt={img.alt || product.name} fill className="object-cover" />
+                  { (img.alt === 'video' || img.url.match(/\.(mp4|webm|ogg)(\?.*)?$/i)) ? (
+                    <div className="w-full h-full relative flex items-center justify-center bg-black">
+                      <video src={img.url} className="w-full h-full object-cover" muted />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                        <Film className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  ) : (
+                    <Image src={img.url} alt={img.alt || product.name} fill className="object-cover" />
+                  )}
                 </button>
               ))}
             </div>
