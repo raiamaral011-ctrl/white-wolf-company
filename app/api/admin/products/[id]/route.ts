@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { MOCK_PRODUCTS } from '@/lib/data/products';
+import { MOCK_PRODUCTS, BRANDS, CATEGORIES } from '@/lib/data/products';
 import { Product } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -26,16 +26,16 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       return NextResponse.json(data);
     }
   } catch (err) {
-    console.error('Error fetching single admin product:', err);
+    console.error('Error fetching product detail:', err);
   }
 
-  // Fallback
-  const found = MOCK_PRODUCTS.find((p) => p.id === id);
-  if (found) {
-    return NextResponse.json(found);
+  // Fallback to MOCK_PRODUCTS
+  const foundMock = MOCK_PRODUCTS.find((p) => p.id === id);
+  if (foundMock) {
+    return NextResponse.json(foundMock);
   }
 
-  return NextResponse.json({ message: 'Produto não encontrado' }, { status: 404 });
+  return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 });
 }
 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
@@ -60,27 +60,50 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       variants,
     } = body;
 
-    if (!name || !brand_id || !category_id || !sku || !price) {
+    if (!name || !price) {
       return NextResponse.json(
-        { success: false, message: 'Campos obrigatórios ausentes.' },
+        { success: false, message: 'Nome e preço são obrigatórios.' },
         { status: 400 }
       );
     }
 
-    const parsedPrice = parseFloat(price);
-    const parsedComparePrice = compare_at_price ? parseFloat(compare_at_price) : null;
-
     const supabase = createAdminClient();
 
-    // 1. Update general info in Supabase
+    // Dynamically resolve valid brand_id
+    let validBrandId = brand_id;
+    if (!validBrandId) {
+      const { data: dbBrands } = await supabase.from('brands').select('id').limit(1);
+      if (dbBrands && dbBrands.length > 0) {
+        validBrandId = dbBrands[0].id;
+      } else {
+        validBrandId = BRANDS[0].id;
+      }
+    }
+
+    // Dynamically resolve valid category_id
+    let validCategoryId = category_id;
+    if (!validCategoryId) {
+      const { data: dbCats } = await supabase.from('categories').select('id').limit(1);
+      if (dbCats && dbCats.length > 0) {
+        validCategoryId = dbCats[0].id;
+      } else {
+        validCategoryId = CATEGORIES[0].id;
+      }
+    }
+
+    const safeSku = sku && sku.trim() ? sku.trim().toUpperCase() : `SKU-${Date.now().toString().slice(-6)}`;
+    const parsedPrice = parseFloat(price);
+    const parsedComparePrice = compare_at_price ? parseFloat(compare_at_price) : undefined;
+
+    // 1. Update product in Supabase
     const { data: updatedProd, error: updateError } = await supabase
       .from('products')
       .update({
-        name,
-        brand_id,
-        category_id,
-        description: description || '',
-        sku: sku.toUpperCase(),
+        name: name.trim(),
+        brand_id: validBrandId,
+        category_id: validCategoryId,
+        description: description?.trim() || '',
+        sku: safeSku,
         price: parsedPrice,
         compare_at_price: parsedComparePrice,
         gender: gender || 'unisex',
@@ -130,7 +153,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     const variantList = Array.isArray(variants) && variants.length > 0 ? variants : [];
     const variantRows = variantList.map((v: any) => ({
       product_id: id,
-      sku: `${sku.toUpperCase()}-SZ${v.size}`,
+      sku: `${safeSku}-SZ${v.size}`,
       size: String(v.size),
       color: v.color || '#0f172a',
       color_name: v.color_name || 'Padrão',
@@ -143,62 +166,61 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
     // Also update in-memory mock products
     const mockIndex = MOCK_PRODUCTS.findIndex((p) => p.id === id);
-    const updatedMockProduct: Product = {
-      id,
-      brand_id,
-      category_id,
-      name,
-      slug: updatedProd.slug,
-      description,
-      sku: sku.toUpperCase(),
-      price: parsedPrice,
-      compare_at_price: parsedComparePrice ?? undefined,
-      gender: gender || 'unisex',
-      sport: sport || 'general',
-      featured: !!featured,
-      is_new: !!is_new,
-      is_sale: !!is_sale,
-      rating: 5.0,
-      review_count: 1,
-      created_at: updatedProd.created_at || new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      images: mediaRows.map((mr, idx) => ({
-        id: 'img-' + Date.now() + '-' + idx,
-        product_id: id,
-        url: mr.url,
-        alt: mr.alt,
-        sort_order: mr.sort_order,
-        created_at: new Date().toISOString(),
-      })),
-      variants: variantRows.map((vr, i) => ({
-        id: 'var-' + Date.now() + '-' + i,
-        product_id: id,
-        sku: vr.sku,
-        size: vr.size,
-        color: vr.color,
-        color_name: vr.color_name,
-        stock: vr.stock,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })),
-    };
-
     if (mockIndex !== -1) {
-      MOCK_PRODUCTS[mockIndex] = updatedMockProduct;
-    } else {
-      MOCK_PRODUCTS.unshift(updatedMockProduct);
+      MOCK_PRODUCTS[mockIndex] = {
+        ...MOCK_PRODUCTS[mockIndex],
+        name: name.trim(),
+        brand_id: validBrandId,
+        category_id: validCategoryId,
+        price: parsedPrice,
+        compare_at_price: parsedComparePrice,
+        description,
+        sku: safeSku,
+        updated_at: new Date().toISOString(),
+      };
     }
 
     return NextResponse.json({
       success: true,
       message: 'Produto atualizado com sucesso!',
-      product: updatedMockProduct,
+      product: updatedProd,
     });
-
   } catch (err: any) {
-    console.error('Error updating product:', err);
+    console.error('Error in PUT /api/admin/products/[id]:', err);
     return NextResponse.json(
-      { success: false, message: 'Erro ao atualizar produto: ' + err.message },
+      { success: false, message: 'Erro interno ao atualizar produto: ' + err.message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+  const { id } = params;
+
+  try {
+    const supabase = createAdminClient();
+    const { error } = await supabase.from('products').delete().eq('id', id);
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, message: 'Erro ao excluir produto: ' + error.message },
+        { status: 500 }
+      );
+    }
+
+    // Remove from mock array if present
+    const index = MOCK_PRODUCTS.findIndex((p) => p.id === id);
+    if (index !== -1) {
+      MOCK_PRODUCTS.splice(index, 1);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Produto excluído com sucesso.',
+    });
+  } catch (err: any) {
+    return NextResponse.json(
+      { success: false, message: 'Erro interno ao excluir produto: ' + err.message },
       { status: 500 }
     );
   }

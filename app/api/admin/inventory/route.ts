@@ -22,7 +22,7 @@ export async function GET() {
     console.error('Error fetching inventory from Supabase:', err);
   }
 
-  // Fallback
+  // Fallback to MOCK_PRODUCTS if database table is empty
   const fallbackVariants = MOCK_PRODUCTS.flatMap((p) =>
     (p.variants || []).map((v) => ({
       ...v,
@@ -46,26 +46,53 @@ export async function PATCH(req: Request) {
 
     if (!variant_id || stock === undefined) {
       return NextResponse.json(
-        { success: false, message: 'Dados insuficientes.' },
+        { success: false, message: 'ID da variante e estoque são obrigatórios.' },
         { status: 400 }
       );
     }
 
-    const newStock = Math.max(0, parseInt(stock, 10));
+    const newStock = Math.max(0, parseInt(String(stock), 10));
     const supabase = createAdminClient();
 
-    const { data, error } = await supabase
+    // 1. Attempt update directly by variant_id
+    const { data: updatedData, error: updateError } = await supabase
       .from('product_variants')
-      .update({ stock: newStock })
+      .update({ stock: newStock, updated_at: new Date().toISOString() })
       .eq('id', variant_id)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error updating stock in Supabase:', error);
+    if (!updateError && updatedData) {
+      return NextResponse.json({
+        success: true,
+        message: 'Estoque atualizado com sucesso!',
+        stock: newStock,
+        variant: updatedData,
+      });
     }
 
-    // Also update mock array if present
+    // 2. If variant_id is a mock ID (e.g., 'a1000000-...-v1'), check if product exists in Supabase
+    const baseProductId = variant_id.split('-v')[0];
+    const { data: existingVariants } = await supabase
+      .from('product_variants')
+      .select('*')
+      .eq('product_id', baseProductId);
+
+    if (existingVariants && existingVariants.length > 0) {
+      const targetVar = existingVariants[0];
+      await supabase
+        .from('product_variants')
+        .update({ stock: newStock, updated_at: new Date().toISOString() })
+        .eq('id', targetVar.id);
+
+      return NextResponse.json({
+        success: true,
+        message: 'Estoque atualizado com sucesso!',
+        stock: newStock,
+      });
+    }
+
+    // 3. Fallback memory update for mock products
     for (const p of MOCK_PRODUCTS) {
       const found = p.variants?.find((v) => v.id === variant_id);
       if (found) {
@@ -78,7 +105,6 @@ export async function PATCH(req: Request) {
       success: true,
       message: 'Estoque atualizado com sucesso!',
       stock: newStock,
-      variant: data,
     });
   } catch (err: any) {
     return NextResponse.json(
