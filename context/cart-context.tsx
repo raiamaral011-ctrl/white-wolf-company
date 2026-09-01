@@ -53,6 +53,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items]);
 
   const addItem = (product: Product, variant: ProductVariant, quantity: number = 1) => {
+    const maxStock = variant.stock !== undefined && variant.stock !== null ? variant.stock : 99;
+
     setItems((prev) => {
       const existingIndex = prev.findIndex(
         (item) => item.product.id === product.id && item.variant.id === variant.id
@@ -60,7 +62,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       if (existingIndex > -1) {
         const updated = [...prev];
-        updated[existingIndex].quantity += quantity;
+        const newQty = Math.min(updated[existingIndex].quantity + quantity, maxStock);
+        updated[existingIndex].quantity = newQty;
         return updated;
       }
 
@@ -70,7 +73,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           id: `${product.id}-${variant.id}`,
           product,
           variant,
-          quantity,
+          quantity: Math.min(quantity, maxStock),
         },
       ];
     });
@@ -88,7 +91,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     setItems((prev) =>
-      prev.map((item) => (item.id === itemId ? { ...item, quantity } : item))
+      prev.map((item) => {
+        if (item.id === itemId) {
+          const maxStock = item.variant.stock !== undefined && item.variant.stock !== null ? item.variant.stock : 99;
+          return { ...item, quantity: Math.min(quantity, maxStock) };
+        }
+        return item;
+      })
     );
   };
 

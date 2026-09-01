@@ -152,7 +152,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       description,
       sku: sku.toUpperCase(),
       price: parsedPrice,
-      compare_at_price: parsedComparePrice,
+      compare_at_price: parsedComparePrice ?? undefined,
       gender: gender || 'unisex',
       sport: sport || 'general',
       featured: !!featured,
