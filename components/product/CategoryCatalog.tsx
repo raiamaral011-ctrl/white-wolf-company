@@ -18,44 +18,6 @@ interface CategoryCatalogProps {
   onlySale?: boolean;
 }
 
-function applyFilters(products: Product[], opts: FilterOptions, onlySale?: boolean): Product[] {
-  let prods = [...products];
-
-  if (onlySale) {
-    prods = prods.filter((p) => p.is_sale);
-  }
-
-  if (opts.categorySlug) {
-    prods = prods.filter((p) => p.category?.slug === opts.categorySlug);
-  }
-
-  if (opts.brandSlug) {
-    prods = prods.filter((p) => p.brand?.slug === opts.brandSlug);
-  }
-
-  if (opts.gender) {
-    prods = prods.filter((p) => p.gender === opts.gender || p.gender === 'unisex');
-  }
-
-  if (opts.minPrice !== undefined) {
-    prods = prods.filter((p) => p.price >= opts.minPrice!);
-  }
-
-  if (opts.maxPrice !== undefined) {
-    prods = prods.filter((p) => p.price <= opts.maxPrice!);
-  }
-
-  if (opts.sort === 'price_asc') {
-    prods.sort((a, b) => a.price - b.price);
-  } else if (opts.sort === 'price_desc') {
-    prods.sort((a, b) => b.price - a.price);
-  } else if (opts.sort === 'rating') {
-    prods.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-  }
-
-  return prods;
-}
-
 export function CategoryCatalog({
   title,
   subtitle,
@@ -74,14 +36,28 @@ export function CategoryCatalog({
     sort: 'relevance',
   });
 
-  // Fetch live products from API (Supabase-backed, falls back to mock)
+  // Keep initial categorySlug / brandSlug synced if props change
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      categorySlug: categorySlug ?? prev.categorySlug,
+      brandSlug: brandSlug ?? prev.brandSlug,
+      gender: genderFilter ?? prev.gender,
+    }));
+  }, [categorySlug, brandSlug, genderFilter]);
+
+  // Fetch live products from API (Supabase-backed, fallback to mock)
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
         const params = new URLSearchParams();
-        if (categorySlug) params.set('category', categorySlug);
-        if (brandSlug) params.set('brand', brandSlug);
+        if (filters.categorySlug) params.set('category', filters.categorySlug);
+        if (filters.brandSlug) params.set('brand', filters.brandSlug);
+        if (filters.gender) params.set('gender', filters.gender);
+        if (filters.minPrice !== undefined) params.set('minPrice', String(filters.minPrice));
+        if (filters.maxPrice !== undefined) params.set('maxPrice', String(filters.maxPrice));
+        if (filters.sort) params.set('sort', filters.sort);
         if (onlySale) params.set('sale', 'true');
 
         const res = await fetch(`/api/products?${params.toString()}`);
@@ -91,7 +67,8 @@ export function CategoryCatalog({
         } else {
           setAllProducts([...MOCK_PRODUCTS]);
         }
-      } catch {
+      } catch (err) {
+        console.error('Error fetching catalog products:', err);
         setAllProducts([...MOCK_PRODUCTS]);
       } finally {
         setLoading(false);
@@ -99,16 +76,92 @@ export function CategoryCatalog({
     };
 
     fetchProducts();
-  }, [categorySlug, brandSlug, onlySale]);
+  }, [
+    filters.categorySlug,
+    filters.brandSlug,
+    filters.gender,
+    filters.minPrice,
+    filters.maxPrice,
+    filters.sort,
+    filters.sizes,
+    onlySale,
+  ]);
 
-  const displayedProducts = applyFilters(allProducts, filters, onlySale);
+  // STRICT CLIENT-SIDE AND FILTERING AS EXTRA GUARANTEE
+  const displayedProducts = allProducts.filter((p) => {
+    // 1. Sale check
+    if (onlySale && !p.is_sale) return false;
+
+    // 2. Brand Check (STRICT EQUALITY)
+    if (filters.brandSlug) {
+      const targetBrand = filters.brandSlug.toLowerCase();
+      const pBrandSlug = p.brand?.slug?.toLowerCase() || '';
+      const pBrandName = p.brand?.name?.toLowerCase() || '';
+      if (pBrandSlug !== targetBrand && pBrandName !== targetBrand) return false;
+    }
+
+    // 3. Category Check (STRICT EQUALITY)
+    if (filters.categorySlug) {
+      const targetCat = filters.categorySlug.toLowerCase();
+      const pCatSlug = p.category?.slug?.toLowerCase() || '';
+      const pCatName = p.category?.name?.toLowerCase() || '';
+      if (pCatSlug !== targetCat && pCatName !== targetCat) return false;
+    }
+
+    // 4. Gender Check
+    if (filters.gender) {
+      const targetGender = filters.gender.toLowerCase();
+      const pGender = p.gender?.toLowerCase() || 'unisex';
+      if (pGender !== targetGender && pGender !== 'unisex') return false;
+    }
+
+    // 5. Price Min
+    if (filters.minPrice !== undefined && Number(p.price) < filters.minPrice) return false;
+
+    // 6. Price Max
+    if (filters.maxPrice !== undefined && Number(p.price) > filters.maxPrice) return false;
+
+    // 7. Size Filter
+    if (filters.sizes && filters.sizes.length > 0) {
+      if (!p.variants || p.variants.length === 0) return true;
+      const hasSize = p.variants.some(
+        (v) => filters.sizes!.includes(String(v.size)) && Number(v.stock) > 0
+      );
+      if (!hasSize) return false;
+    }
+
+    return true;
+  });
+
+  // Sort displayed products
+  if (filters.sort === 'price_asc') {
+    displayedProducts.sort((a, b) => Number(a.price) - Number(b.price));
+  } else if (filters.sort === 'price_desc') {
+    displayedProducts.sort((a, b) => Number(b.price) - Number(a.price));
+  } else if (filters.sort === 'rating') {
+    displayedProducts.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+  } else if (filters.sort === 'newest') {
+    displayedProducts.sort(
+      (a, b) =>
+        new Date(b.created_at || Date.now()).getTime() -
+        new Date(a.created_at || Date.now()).getTime()
+    );
+  }
 
   const handleFilterChange = (newFilters: FilterOptions) => {
     setFilters(newFilters);
   };
 
   const handleReset = () => {
-    setFilters({ categorySlug, brandSlug, gender: genderFilter, sort: 'relevance' as const });
+    setFilters({
+      categorySlug: categorySlug,
+      brandSlug: brandSlug,
+      gender: genderFilter,
+      sort: 'relevance',
+      minPrice: undefined,
+      maxPrice: undefined,
+      sizes: [],
+    });
   };
 
   return (
@@ -157,12 +210,13 @@ export function CategoryCatalog({
                   onChange={(e) =>
                     handleFilterChange({ ...filters, sort: e.target.value as FilterOptions['sort'] })
                   }
-                  className="bg-wolf-900 border border-wolf-800 text-white text-xs px-3 py-1.5 focus:outline-none focus:border-accent font-mono uppercase"
+                  className="bg-wolf-900 border border-wolf-800 text-white text-xs px-3 py-1.5 focus:outline-none focus:border-accent font-mono uppercase cursor-pointer"
                 >
                   <option value="relevance">Mais Relevantes</option>
                   <option value="price_asc">Menor Preço</option>
                   <option value="price_desc">Maior Preço</option>
                   <option value="rating">Melhor Avaliados</option>
+                  <option value="newest">Mais Recentes</option>
                 </select>
               </div>
             </div>
@@ -181,8 +235,14 @@ export function CategoryCatalog({
                 ))}
               </div>
             ) : displayedProducts.length === 0 ? (
-              <div className="text-center py-16 text-wolf-500 font-mono text-sm">
-                Nenhum produto encontrado com os filtros selecionados.
+              <div className="text-center py-20 bg-wolf-900/50 border border-wolf-800 rounded-sm space-y-3 font-mono">
+                <p className="text-sm text-wolf-300">Nenhum produto encontrado com os filtros selecionados.</p>
+                <button
+                  onClick={handleReset}
+                  className="text-xs font-bold text-accent uppercase hover:underline"
+                >
+                  Limpar todos os filtros →
+                </button>
               </div>
             ) : (
               <ProductGrid products={displayedProducts} />

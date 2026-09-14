@@ -7,15 +7,24 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
+
   const slug = searchParams.get('slug');
-  const brandSlug = searchParams.get('brand');
-  const categorySlug = searchParams.get('category');
-  const q = searchParams.get('q');
+  const brandSlug = searchParams.get('brand') || searchParams.get('marca');
+  const categorySlug = searchParams.get('category') || searchParams.get('categoria');
+  const gender = searchParams.get('gender') || searchParams.get('genero');
+  const sport = searchParams.get('sport');
+  const size = searchParams.get('size') || searchParams.get('tamanho');
+  const minPriceParam = searchParams.get('minPrice');
+  const maxPriceParam = searchParams.get('maxPrice');
+  const sort = searchParams.get('sort') || searchParams.get('ordenar');
+  const q = searchParams.get('q') || searchParams.get('search');
+  const sale = searchParams.get('sale');
   const featured = searchParams.get('featured');
 
   try {
     const supabase = createAdminClient();
 
+    // Fetch products from Supabase
     let query = supabase
       .from('products')
       .select(`
@@ -33,79 +42,149 @@ export async function GET(req: Request) {
     if (featured === 'true') {
       query = query.eq('featured', true);
     }
-
-    const { data, error } = await query;
-
-    if (!error && data && data.length > 0) {
-      let filtered = data as Product[];
-
-      if (brandSlug) {
-        filtered = filtered.filter(
-          (p) => p.brand?.slug.toLowerCase() === brandSlug.toLowerCase()
-        );
-      }
-
-      if (categorySlug) {
-        filtered = filtered.filter(
-          (p) => p.category?.slug.toLowerCase() === categorySlug.toLowerCase()
-        );
-      }
-
-      if (q) {
-        const term = q.toLowerCase();
-        filtered = filtered.filter(
-          (p) =>
-            p.name.toLowerCase().includes(term) ||
-            p.brand?.name.toLowerCase().includes(term) ||
-            p.category?.name.toLowerCase().includes(term) ||
-            p.sku.toLowerCase().includes(term)
-        );
-      }
-
-      if (slug) {
-        return NextResponse.json(filtered[0] || null);
-      }
-
-      return NextResponse.json(filtered);
+    if (sale === 'true') {
+      query = query.eq('is_sale', true);
     }
-  } catch (err) {
-    console.error('Supabase fetch error, fallback to mock data:', err);
+
+    const { data: dbProducts, error } = await query;
+
+    let productsList: Product[] = [];
+
+    if (!error && dbProducts && dbProducts.length > 0) {
+      productsList = dbProducts as Product[];
+    } else {
+      productsList = [...MOCK_PRODUCTS];
+    }
+
+    // Merge mock products if DB has fewer items so user always sees full catalog
+    if (productsList.length < MOCK_PRODUCTS.length && !slug) {
+      const dbIds = new Set(productsList.map((p) => p.id));
+      const dbSkus = new Set(productsList.map((p) => p.sku?.toUpperCase()));
+
+      MOCK_PRODUCTS.forEach((mockP) => {
+        if (!dbIds.has(mockP.id) && !dbSkus.has(mockP.sku?.toUpperCase())) {
+          productsList.push(mockP);
+        }
+      });
+    }
+
+    // Single product lookup by slug
+    if (slug) {
+      const single = productsList.find((p) => p.slug === slug) || productsList[0] || null;
+      return NextResponse.json(single);
+    }
+
+    // APPLY STRICT FILTERS (AND LOGIC)
+    let filtered = productsList;
+
+    // 1. BRAND FILTER (Strict equality on brand slug or name)
+    if (brandSlug && brandSlug.trim()) {
+      const targetBrand = brandSlug.trim().toLowerCase();
+      filtered = filtered.filter((p) => {
+        const pBrandSlug = p.brand?.slug?.toLowerCase() || '';
+        const pBrandName = p.brand?.name?.toLowerCase() || '';
+        return pBrandSlug === targetBrand || pBrandName === targetBrand;
+      });
+    }
+
+    // 2. CATEGORY FILTER (Strict equality on category slug or name)
+    if (categorySlug && categorySlug.trim()) {
+      const targetCat = categorySlug.trim().toLowerCase();
+      filtered = filtered.filter((p) => {
+        const pCatSlug = p.category?.slug?.toLowerCase() || '';
+        const pCatName = p.category?.name?.toLowerCase() || '';
+        return pCatSlug === targetCat || pCatName === targetCat;
+      });
+    }
+
+    // 3. GENDER FILTER
+    if (gender && gender.trim()) {
+      const targetGender = gender.trim().toLowerCase();
+      filtered = filtered.filter((p) => {
+        const pGender = p.gender?.toLowerCase() || 'unisex';
+        return pGender === targetGender || pGender === 'unisex';
+      });
+    }
+
+    // 4. SPORT FILTER
+    if (sport && sport.trim()) {
+      const targetSport = sport.trim().toLowerCase();
+      filtered = filtered.filter((p) => {
+        const pSport = p.sport?.toLowerCase() || 'general';
+        const pName = p.name?.toLowerCase() || '';
+        const pDesc = p.description?.toLowerCase() || '';
+        return (
+          pSport === targetSport ||
+          pName.includes(targetSport) ||
+          pDesc.includes(targetSport)
+        );
+      });
+    }
+
+    // 5. SIZE FILTER
+    if (size && size.trim()) {
+      const targetSize = size.trim();
+      filtered = filtered.filter((p) => {
+        if (!p.variants || p.variants.length === 0) return true;
+        return p.variants.some((v) => String(v.size) === targetSize && Number(v.stock) > 0);
+      });
+    }
+
+    // 6. PRICE RANGE FILTERS
+    if (minPriceParam) {
+      const minPrice = parseFloat(minPriceParam);
+      if (!isNaN(minPrice)) {
+        filtered = filtered.filter((p) => Number(p.price) >= minPrice);
+      }
+    }
+
+    if (maxPriceParam) {
+      const maxPrice = parseFloat(maxPriceParam);
+      if (!isNaN(maxPrice)) {
+        filtered = filtered.filter((p) => Number(p.price) <= maxPrice);
+      }
+    }
+
+    // 7. SEARCH QUERY FILTER
+    if (q && q.trim()) {
+      const term = q.trim().toLowerCase();
+      filtered = filtered.filter((p) => {
+        const name = p.name?.toLowerCase() || '';
+        const brandName = p.brand?.name?.toLowerCase() || '';
+        const catName = p.category?.name?.toLowerCase() || '';
+        const sku = p.sku?.toLowerCase() || '';
+        const desc = p.description?.toLowerCase() || '';
+        return (
+          name.includes(term) ||
+          brandName.includes(term) ||
+          catName.includes(term) ||
+          sku.includes(term) ||
+          desc.includes(term)
+        );
+      });
+    }
+
+    // 8. SORTING
+    if (sort) {
+      const s = sort.toLowerCase();
+      if (s === 'price_asc' || s === 'price-asc' || s === 'menor-preco') {
+        filtered.sort((a, b) => Number(a.price) - Number(b.price));
+      } else if (s === 'price_desc' || s === 'price-desc' || s === 'maior-preco') {
+        filtered.sort((a, b) => Number(b.price) - Number(a.price));
+      } else if (s === 'rating' || s === 'avaliacoes') {
+        filtered.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+      } else if (s === 'newest' || s === 'recentes') {
+        filtered.sort(
+          (a, b) =>
+            new Date(b.created_at || Date.now()).getTime() -
+            new Date(a.created_at || Date.now()).getTime()
+        );
+      }
+    }
+
+    return NextResponse.json(filtered);
+  } catch (err: any) {
+    console.error('Error in GET /api/products:', err);
+    return NextResponse.json([...MOCK_PRODUCTS]);
   }
-
-  // Fallback to MOCK_PRODUCTS
-  let filtered = [...MOCK_PRODUCTS];
-
-  if (slug) {
-    const found = filtered.find((p) => p.slug === slug);
-    return NextResponse.json(found || null);
-  }
-
-  if (brandSlug) {
-    filtered = filtered.filter(
-      (p) => p.brand?.slug.toLowerCase() === brandSlug.toLowerCase()
-    );
-  }
-
-  if (categorySlug) {
-    filtered = filtered.filter(
-      (p) => p.category?.slug.toLowerCase() === categorySlug.toLowerCase()
-    );
-  }
-
-  if (featured === 'true') {
-    filtered = filtered.filter((p) => p.featured);
-  }
-
-  if (q) {
-    const term = q.toLowerCase();
-    filtered = filtered.filter(
-      (p) =>
-        p.name.toLowerCase().includes(term) ||
-        p.brand?.name.toLowerCase().includes(term) ||
-        p.category?.name.toLowerCase().includes(term) ||
-        p.sku.toLowerCase().includes(term)
-    );
-  }
-
-  return NextResponse.json(filtered);
 }

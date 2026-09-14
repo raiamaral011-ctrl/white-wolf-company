@@ -11,7 +11,18 @@ interface ProductFiltersProps {
   onReset: () => void;
 }
 
+const AVAILABLE_SIZES = ['37', '38', '39', '40', '41', '42', '43', '44', '45', 'P', 'M', 'G', 'GG'];
+
 export function ProductFilters({ filters, onFilterChange, onReset }: ProductFiltersProps) {
+  const currentSizes = filters.sizes || [];
+
+  const toggleSize = (size: string) => {
+    const updated = currentSizes.includes(size)
+      ? currentSizes.filter((s) => s !== size)
+      : [...currentSizes, size];
+    onFilterChange({ ...filters, sizes: updated });
+  };
+
   return (
     <aside className="w-full lg:w-64 space-y-6 bg-wolf-950 p-6 border border-wolf-800 rounded-sm">
       <div className="flex items-center justify-between pb-4 border-b border-wolf-800">
@@ -23,7 +34,7 @@ export function ProductFilters({ filters, onFilterChange, onReset }: ProductFilt
         </div>
         <button
           onClick={onReset}
-          className="text-[10px] font-mono text-wolf-400 hover:text-accent flex items-center gap-1 uppercase tracking-wider"
+          className="text-[10px] font-mono text-wolf-400 hover:text-accent flex items-center gap-1 uppercase tracking-wider transition-colors"
           title="Limpar todos os filtros"
         >
           <RotateCcw className="w-3 h-3" />
@@ -105,12 +116,38 @@ export function ProductFilters({ filters, onFilterChange, onReset }: ProductFilt
         </div>
       </div>
 
+      {/* TAMANHO */}
+      <div className="space-y-3 pt-4 border-t border-wolf-800">
+        <h4 className="text-[11px] font-bold uppercase tracking-wider text-wolf-300 font-mono">
+          TAMANHO
+        </h4>
+        <div className="grid grid-cols-4 gap-1.5 font-mono text-xs">
+          {AVAILABLE_SIZES.map((sz) => {
+            const isSelected = currentSizes.includes(sz);
+            return (
+              <button
+                key={sz}
+                type="button"
+                onClick={() => toggleSize(sz)}
+                className={`py-1.5 border text-center transition-colors font-bold ${
+                  isSelected
+                    ? 'bg-accent border-accent text-white'
+                    : 'bg-wolf-900 border-wolf-800 text-wolf-300 hover:border-wolf-600 hover:text-white'
+                }`}
+              >
+                {sz}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* PREÇO */}
       <div className="space-y-3 pt-4 border-t border-wolf-800">
         <h4 className="text-[11px] font-bold uppercase tracking-wider text-wolf-300 font-mono">
           FAIXA DE PREÇO
         </h4>
-        <div className="flex gap-2">
+        <div className="flex gap-2 font-mono">
           <input
             type="number"
             placeholder="Min R$"
