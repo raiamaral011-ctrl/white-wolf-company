@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingBag, Users, Layers, Tag, ArrowLeft, ShieldAlert, LogOut, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Home, Package, ShoppingBag, Users, Layers, Tag, ArrowLeft, ShieldAlert, LogOut, ShieldCheck } from 'lucide-react';
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -11,6 +11,7 @@ export function AdminSidebar() {
 
   const links = [
     { href: '/admin', label: 'DASHBOARD', icon: LayoutDashboard },
+    { href: '/admin/gerenciar-home', label: 'PÁGINA INICIAL', icon: Home },
     { href: '/admin/produtos', label: 'PRODUTOS', icon: Package },
     { href: '/admin/pedidos', label: 'PEDIDOS', icon: ShoppingBag },
     { href: '/admin/clientes', label: 'CLIENTES', icon: Users },

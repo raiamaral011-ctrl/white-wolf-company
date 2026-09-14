@@ -1,208 +1,392 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import { Header } from '@/components/header/Header';
 import { Footer } from '@/components/footer/Footer';
-import { Hero } from '@/components/home/Hero';
-import { BrandShowcase } from '@/components/home/BrandShowcase';
-import { CategoryGrid } from '@/components/home/CategoryGrid';
 import { ProductGrid } from '@/components/product/ProductGrid';
-import { MOCK_PRODUCTS } from '@/lib/data/products';
-import { Product } from '@/types';
-import Link from 'next/link';
-import { ArrowRight, Flame, Sparkles, Tag } from 'lucide-react';
+import { Product, Brand, Category } from '@/types';
+import { HomeSection } from '@/app/admin/gerenciar-home/page';
+import {
+  ChevronRight, Sparkles, ShoppingBag, ArrowRight, ShieldCheck,
+  Award, Zap, Star, RefreshCw, Layers, Tag
+} from 'lucide-react';
 
-async function getLiveProducts(): Promise<Product[]> {
-  try {
-    const { createAdminClient } = await import('@/lib/supabase/admin');
-    const supabase = createAdminClient();
-    const { data, error } = await supabase
-      .from('products')
-      .select(`
-        *,
-        brand:brands(*),
-        category:categories(*),
-        images:product_images(*),
-        variants:product_variants(*)
-      `)
-      .order('created_at', { ascending: false });
+export default function HomePage() {
+  const [sections, setSections] = useState<HomeSection[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [productsMap, setProductsMap] = useState<{ [key: string]: Product[] }>({});
+  const [loading, setLoading] = useState(true);
 
-    if (!error && data && data.length > 0) {
-      return data as Product[];
+  useEffect(() => {
+    async function loadHomeData() {
+      setLoading(true);
+      try {
+        // Fetch active home sections, brands, categories in parallel
+        const [secRes, metaRes] = await Promise.all([
+          fetch('/api/admin/home-sections'),
+          fetch('/api/admin/meta'),
+        ]);
+
+        let activeSections: HomeSection[] = [];
+        if (secRes.ok) {
+          const secData = await secRes.json();
+          activeSections = (secData || []).filter((s: HomeSection) => s.is_active);
+          setSections(activeSections);
+        }
+
+        if (metaRes.ok) {
+          const metaData = await metaRes.json();
+          setBrands(metaData.brands || []);
+          setCategories(metaData.categories || []);
+        }
+
+        // Fetch products for any 'products' sections
+        const prodSections = activeSections.filter((s) => s.type === 'products');
+        if (prodSections.length > 0) {
+          const map: { [key: string]: Product[] } = {};
+          for (const s of prodSections) {
+            const source = s.content?.productSource || 'all';
+            let url = '/api/products';
+            if (source === 'nike') url = '/api/products?brand=nike';
+            else if (source === 'adidas') url = '/api/products?brand=adidas';
+            else if (source === 'tenis') url = '/api/products?category=tenis';
+            else if (source === 'roupas') url = '/api/products?category=roupas';
+            else if (source === 'sale') url = '/api/products?sale=true';
+
+            const res = await fetch(url);
+            if (res.ok) {
+              const prods = await res.json();
+              map[s.id] = prods;
+            }
+          }
+          setProductsMap(map);
+        }
+      } catch (err) {
+        console.error('Error loading home data:', err);
+      } finally {
+        setLoading(false);
+      }
     }
-  } catch (err) {
-    console.error('Homepage Supabase fetch failed, using mock data:', err);
-  }
-  return MOCK_PRODUCTS;
-}
 
-export default async function HomePage() {
-  const allProducts = await getLiveProducts();
-
-  const featuredProducts = allProducts.filter((p) => p.featured);
-  const newProducts = allProducts.filter((p) => p.is_new);
-  const adidasProducts = allProducts.filter((p) => p.brand?.slug === 'adidas');
-  const nikeProducts = allProducts.filter((p) => p.brand?.slug === 'nike');
-
-  // Filter products for marathoners
-  const marathonProducts = allProducts.filter((p) => {
-    const nameLower = p.name.toLowerCase();
-    const descLower = p.description.toLowerCase();
-    return (
-      p.sport === 'corrida' ||
-      p.sport === 'running' ||
-      nameLower.includes('adizero') ||
-      nameLower.includes('alphafly') ||
-      nameLower.includes('nimbus') ||
-      nameLower.includes('pegasus') ||
-      nameLower.includes('marathon') ||
-      descLower.includes('maratona')
-    );
-  });
+    loadHomeData();
+  }, []);
 
   return (
     <div className="min-h-screen bg-wolf-950 text-white flex flex-col font-sans">
       <Header />
 
-      <main className="flex-1">
-        {/* HERO */}
-        <Hero />
-
-        {/* BRAND SHOWCASE */}
-        <BrandShowcase />
-
-        {/* CATEGORIES */}
-        <CategoryGrid />
-
-        {/* PRODUTOS EM DESTAQUE */}
-        <section className="py-20 bg-wolf-950 border-b border-wolf-800">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-            <div className="flex items-end justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-accent font-mono text-xs font-bold uppercase tracking-widest">
-                  <Flame className="w-4 h-4 fill-accent" />
-                  SELEÇÃO ESPECIAL
-                </div>
-                <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white font-heading mt-1">
-                  PRODUTOS EM DESTAQUE
-                </h2>
-              </div>
-              <Link href="/tenis" className="text-xs font-mono text-accent hover:underline uppercase tracking-wider flex items-center gap-1 font-bold hidden sm:flex">
-                VER CATALOGO COMPLETO <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            <ProductGrid products={(featuredProducts.length > 0 ? featuredProducts : allProducts).slice(0, 4)} />
+      {/* RENDER DYNAMIC SECTIONS CONTROLLED BY ADMIN */}
+      <main className="flex-1 space-y-16 pb-16">
+        {loading ? (
+          <div className="p-20 text-center text-wolf-400 font-mono text-xs flex flex-col items-center justify-center gap-3">
+            <RefreshCw className="w-6 h-6 text-accent animate-spin" />
+            <span>Carregando experiência White Wolf Company...</span>
           </div>
-        </section>
-
-        {/* BANNER PROMOCIONAL */}
-        <section className="py-16 bg-gradient-to-r from-wolf-950 via-wolf-900 to-black border-b border-wolf-800 relative overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
-            <div className="space-y-4 max-w-xl">
-              <span className="px-3 py-1 bg-accent text-white text-[10px] font-mono font-extrabold uppercase tracking-widest inline-block">
-                OFERTA DA SEMANA
-              </span>
-              <h3 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white font-heading">
-                DESCONTO ESPECIAL DE ATÉ 30% OFF
-              </h3>
-              <p className="text-sm text-wolf-300">
-                Aproveite preços reduzidos em calçados de corrida e vestuário de alta performance. Estoque limitado.
-              </p>
-            </div>
-
-            <Link
-              href="/ofertas"
-              className="px-8 py-4 bg-white text-wolf-950 font-black text-xs uppercase tracking-widest hover:bg-wolf-200 transition-colors flex items-center gap-2 shrink-0"
-            >
-              VER OFERTAS DA SEMANA
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </section>
-
-        {/* NOVIDADES */}
-        <section className="py-20 bg-black border-b border-wolf-800">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-            <div className="flex items-end justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs font-bold uppercase tracking-widest">
-                  <Sparkles className="w-4 h-4" />
-                  ÚLTIMOS LANÇAMENTOS
-                </div>
-                <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white font-heading mt-1">
-                  NOVIDADES CHEGANDO
-                </h2>
-              </div>
-              <Link href="/tenis" className="text-xs font-mono text-accent hover:underline uppercase tracking-wider flex items-center gap-1 font-bold hidden sm:flex">
-                VER NOVIDADES <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            <ProductGrid products={(newProducts.length > 0 ? newProducts : allProducts).slice(0, 4)} />
-          </div>
-        </section>
-
-        {/* ESPAÇO MARATONISTA PERFORMANCE SECTION */}
-        <section className="py-20 bg-wolf-900/40 border-b border-wolf-800 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-rose-950/20 via-transparent to-transparent z-0 pointer-events-none" />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 relative z-10">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-              <div>
-                <span className="text-xs font-mono text-accent uppercase font-black tracking-widest block">
-                  ALTA PERFORMANCE • 42K
+        ) : sections.length === 0 ? (
+          /* ELEGANT EMPTY/WELCOME HOME STATE inspirada no layout minimalista da Nike */
+          <div className="space-y-16">
+            {/* HERO BI-COLOR BRAND BANNER */}
+            <section className="relative bg-gradient-to-r from-wolf-950 via-wolf-900 to-black border-b border-wolf-800 py-24 sm:py-32 px-4 sm:px-6 lg:px-8 text-center overflow-hidden">
+              <div className="max-w-4xl mx-auto space-y-6 relative z-10">
+                <span className="inline-flex items-center gap-2 text-xs font-mono font-bold text-accent uppercase tracking-widest bg-accent/10 border border-accent/30 px-3 py-1 rounded-xs">
+                  <Sparkles className="w-3.5 h-3.5" /> LOJA OFICIAL WHITE WOLF COMPANY
                 </span>
-                <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white font-heading mt-1">
-                  ESPAÇO MARATONISTA
-                </h2>
-                <p className="text-sm text-wolf-400 font-mono mt-1">
-                  Tênis de elite com placa de carbono, amortecimento responsivo e artigos para longas distâncias.
+
+                <h1 className="text-4xl sm:text-6xl font-black uppercase font-heading tracking-tight text-white leading-tight">
+                  EQUIPAMENTOS DE ELITE PARA <span className="text-accent">ALTA PERFORMANCE</span>
+                </h1>
+
+                <p className="text-sm sm:text-base text-wolf-300 max-w-2xl mx-auto font-sans leading-relaxed">
+                  Trabalhamos exclusivamente com as maiores marcas mundiais de artigos esportivos: Adidas, Nike, ASICS, Puma e New Balance.
                 </p>
-              </div>
-              <Link
-                href="/maratona"
-                className="px-5 py-2.5 bg-accent hover:bg-rose-700 text-white font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2 rounded-xs transition-colors self-start sm:self-auto"
-              >
-                VER LINHA CORRIDA COMPLETA <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
 
-            <ProductGrid products={marathonProducts.slice(0, 4)} />
-          </div>
-        </section>
-
-        {/* PRODUTOS POR MARCA SPOTLIGHTS */}
-        <section className="py-20 bg-wolf-950 border-b border-wolf-800">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-            {/* ADIDAS SPOTLIGHT */}
-            {adidasProducts.length > 0 && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between pb-4 border-b border-wolf-800">
-                  <h3 className="text-2xl font-black uppercase font-heading text-white tracking-wider flex items-center gap-3">
-                    PRODUTOS <span className="text-accent">ADIDAS</span>
-                  </h3>
-                  <Link href="/marca/adidas" className="text-xs font-mono text-wolf-400 hover:text-white uppercase">
-                    VER ADIDAS →
+                <div className="flex flex-wrap justify-center gap-4 pt-4">
+                  <Link
+                    href="/produtos"
+                    className="px-8 py-4 bg-accent hover:bg-rose-700 text-white font-mono text-xs font-bold uppercase tracking-widest transition-all shadow-xl shadow-rose-950/50"
+                  >
+                    EXPLORAR CATÁLOGO COMPLETO →
+                  </Link>
+                  <Link
+                    href="/marcas"
+                    className="px-8 py-4 bg-wolf-900 hover:bg-wolf-800 border border-wolf-700 text-white font-mono text-xs font-bold uppercase tracking-widest transition-all"
+                  >
+                    VER MARCAS PARCEIRAS
                   </Link>
                 </div>
-                <ProductGrid products={adidasProducts.slice(0, 4)} />
               </div>
-            )}
+            </section>
 
-            {/* NIKE SPOTLIGHT */}
-            {nikeProducts.length > 0 && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between pb-4 border-b border-wolf-800">
-                  <h3 className="text-2xl font-black uppercase font-heading text-white tracking-wider flex items-center gap-3">
-                    PRODUTOS <span className="text-accent">NIKE</span>
-                  </h3>
-                  <Link href="/marca/nike" className="text-xs font-mono text-wolf-400 hover:text-white uppercase">
-                    VER NIKE →
+            {/* QUICK FEATURE BADGES */}
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8 bg-wolf-900/60 border border-wolf-800 rounded-sm">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xs bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shrink-0">
+                    <ShieldCheck className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold uppercase font-heading text-white">PRODUTOS 100% ORIGINAIS</h3>
+                    <p className="text-xs text-wolf-400 font-mono">Garantia direta com distribuidor oficial.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xs bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shrink-0">
+                    <Zap className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold uppercase font-heading text-white">ENTREGA RÁPIDA DE ELITE</h3>
+                    <p className="text-xs text-wolf-400 font-mono">Frete grátis em compras acima de R$299.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xs bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shrink-0">
+                    <Award className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold uppercase font-heading text-white">PARCELAMENTO FACILITADO</h3>
+                    <p className="text-xs text-wolf-400 font-mono">Até 12x sem juros no cartão ou 5% OFF PIX.</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* BRAND CATEGORIES SELECTION */}
+            {categories.length > 0 && (
+              <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+                <div className="flex items-center justify-between border-b border-wolf-800 pb-4">
+                  <div>
+                    <span className="text-xs font-mono text-accent uppercase font-bold tracking-widest">
+                      NAVEGUE POR CATEGORIA
+                    </span>
+                    <h2 className="text-2xl font-black uppercase font-heading tracking-tight text-white">
+                      ESPECIALIDADES ESPORTIVAS
+                    </h2>
+                  </div>
+                  <Link href="/produtos" className="text-xs font-mono text-accent hover:underline uppercase">
+                    VER TODAS →
                   </Link>
                 </div>
-                <ProductGrid products={nikeProducts.slice(0, 4)} />
-              </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                  {categories.map((cat) => (
+                    <Link
+                      key={cat.id}
+                      href={`/produtos?categoria=${cat.slug}`}
+                      className="p-6 bg-wolf-900/60 border border-wolf-800 hover:border-accent hover:bg-wolf-900 transition-all text-center space-y-2 rounded-xs group"
+                    >
+                      <Layers className="w-8 h-8 text-accent mx-auto group-hover:scale-110 transition-transform" />
+                      <span className="text-xs font-mono font-bold uppercase text-white block">
+                        {cat.name}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* BRANDS SECTION */}
+            {brands.length > 0 && (
+              <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+                <div className="flex items-center justify-between border-b border-wolf-800 pb-4">
+                  <div>
+                    <span className="text-xs font-mono text-accent uppercase font-bold tracking-widest">
+                      PARCEIROS GLOBAIS
+                    </span>
+                    <h2 className="text-2xl font-black uppercase font-heading tracking-tight text-white">
+                      MARCAS DE ALTA PERFORMANCE
+                    </h2>
+                  </div>
+                  <Link href="/marcas" className="text-xs font-mono text-accent hover:underline uppercase">
+                    VER TODAS AS MARCAS →
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                  {brands.map((b) => (
+                    <Link
+                      key={b.id}
+                      href={`/marca/${b.slug}`}
+                      className="p-6 bg-wolf-900/60 border border-wolf-800 hover:border-accent hover:bg-wolf-900 transition-all text-center space-y-3 rounded-xs group"
+                    >
+                      <Tag className="w-6 h-6 text-accent mx-auto group-hover:scale-110 transition-transform" />
+                      <h3 className="text-lg font-black font-heading uppercase text-white">
+                        {b.name}
+                      </h3>
+                      <span className="text-[10px] font-mono text-accent uppercase tracking-wider block font-bold">
+                        VER COLEÇÃO →
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
             )}
           </div>
-        </section>
+        ) : (
+          /* DYNAMIC SECTIONS RENDERER (CONTROLLED BY ADMIN) */
+          sections.map((sec) => {
+            if (sec.type === 'hero') {
+              return (
+                <section key={sec.id} className="relative bg-gradient-to-r from-wolf-950 via-wolf-900 to-black border-b border-wolf-800 py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
+                  <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    <div className="lg:col-span-6 space-y-4">
+                      {sec.subtitle && (
+                        <span className="text-xs font-mono font-bold text-accent uppercase tracking-widest bg-accent/10 border border-accent/30 px-3 py-1 rounded-xs inline-block">
+                          {sec.subtitle}
+                        </span>
+                      )}
+                      <h1 className="text-3xl sm:text-5xl font-black uppercase font-heading tracking-tight text-white leading-tight">
+                        {sec.title}
+                      </h1>
+                      {sec.description && (
+                        <p className="text-sm text-wolf-300 font-sans leading-relaxed">
+                          {sec.description}
+                        </p>
+                      )}
+                      {sec.button_text && (
+                        <div className="pt-2">
+                          <Link
+                            href={sec.button_url || '/produtos'}
+                            className="px-8 py-4 bg-accent hover:bg-rose-700 text-white font-mono text-xs font-bold uppercase tracking-widest inline-block transition-all shadow-xl"
+                          >
+                            {sec.button_text} →
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+
+                    {sec.image_url && (
+                      <div className="lg:col-span-6">
+                        <div className="aspect-[16/9] relative rounded-sm overflow-hidden border border-wolf-800 shadow-2xl">
+                          <Image src={sec.image_url} alt={sec.title || 'Banner'} fill className="object-cover" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              );
+            }
+
+            if (sec.type === 'banner_split') {
+              return (
+                <section key={sec.id} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="p-8 bg-wolf-900 border border-wolf-800 rounded-sm space-y-4">
+                      {sec.subtitle && (
+                        <span className="text-xs font-mono text-accent uppercase font-bold tracking-wider">
+                          {sec.subtitle}
+                        </span>
+                      )}
+                      <h2 className="text-2xl font-black uppercase font-heading text-white">{sec.title}</h2>
+                      {sec.description && <p className="text-xs text-wolf-300">{sec.description}</p>}
+                      {sec.button_text && (
+                        <Link href={sec.button_url || '/produtos'} className="text-xs font-mono text-accent font-bold uppercase hover:underline inline-block">
+                          {sec.button_text} →
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              );
+            }
+
+            if (sec.type === 'categories') {
+              return (
+                <section key={sec.id} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+                  <div className="border-b border-wolf-800 pb-4">
+                    <span className="text-xs font-mono text-accent uppercase font-bold">{sec.subtitle || 'CATEGORIAS'}</span>
+                    <h2 className="text-2xl font-black uppercase font-heading text-white">{sec.title || 'EXPLORAR CATEGORIAS'}</h2>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                    {categories.map((cat) => (
+                      <Link
+                        key={cat.id}
+                        href={`/produtos?categoria=${cat.slug}`}
+                        className="p-6 bg-wolf-900/60 border border-wolf-800 hover:border-accent transition-all text-center space-y-2 rounded-xs"
+                      >
+                        <Layers className="w-8 h-8 text-accent mx-auto" />
+                        <span className="text-xs font-mono font-bold uppercase text-white block">{cat.name}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              );
+            }
+
+            if (sec.type === 'brands') {
+              return (
+                <section key={sec.id} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+                  <div className="border-b border-wolf-800 pb-4">
+                    <span className="text-xs font-mono text-accent uppercase font-bold">{sec.subtitle || 'MARCAS'}</span>
+                    <h2 className="text-2xl font-black uppercase font-heading text-white">{sec.title || 'MARCAS PARCEIRAS DE ELITE'}</h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {brands.map((b) => (
+                      <Link
+                        key={b.id}
+                        href={`/marca/${b.slug}`}
+                        className="p-6 bg-wolf-900/60 border border-wolf-800 hover:border-accent text-center space-y-3 rounded-xs"
+                      >
+                        <Tag className="w-6 h-6 text-accent mx-auto" />
+                        <h3 className="text-lg font-black font-heading uppercase text-white">{b.name}</h3>
+                        <span className="text-[10px] font-mono text-accent uppercase font-bold block">VER COLEÇÃO →</span>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              );
+            }
+
+            if (sec.type === 'products') {
+              const prods = productsMap[sec.id] || [];
+              return (
+                <section key={sec.id} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+                  <div className="flex items-center justify-between border-b border-wolf-800 pb-4">
+                    <div>
+                      {sec.subtitle && <span className="text-xs font-mono text-accent uppercase font-bold">{sec.subtitle}</span>}
+                      <h2 className="text-2xl font-black uppercase font-heading text-white">{sec.title || 'VITRINE DE PRODUTOS'}</h2>
+                    </div>
+                    {sec.button_text && (
+                      <Link href={sec.button_url || '/produtos'} className="text-xs font-mono text-accent uppercase hover:underline">
+                        {sec.button_text} →
+                      </Link>
+                    )}
+                  </div>
+
+                  <ProductGrid
+                    products={prods}
+                    emptyMessage="Nenhum produto cadastrado nesta categoria no momento."
+                  />
+                </section>
+              );
+            }
+
+            if (sec.type === 'cta') {
+              return (
+                <section key={sec.id} className="bg-gradient-to-r from-rose-950 via-wolf-900 to-black py-16 border-y border-wolf-800">
+                  <div className="max-w-4xl mx-auto px-4 text-center space-y-4">
+                    {sec.subtitle && <span className="text-xs font-mono text-accent font-bold uppercase">{sec.subtitle}</span>}
+                    <h2 className="text-3xl font-black font-heading uppercase text-white">{sec.title}</h2>
+                    {sec.description && <p className="text-xs text-wolf-300">{sec.description}</p>}
+                    {sec.button_text && (
+                      <Link href={sec.button_url || '/produtos'} className="px-8 py-3.5 bg-accent text-white font-mono text-xs font-bold uppercase tracking-widest inline-block shadow-lg">
+                        {sec.button_text} →
+                      </Link>
+                    )}
+                  </div>
+                </section>
+              );
+            }
+
+            return null;
+          })
+        )}
       </main>
 
       <Footer />
