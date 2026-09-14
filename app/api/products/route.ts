@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { MOCK_PRODUCTS } from '@/lib/data/products';
 import { Product } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -24,7 +23,7 @@ export async function GET(req: Request) {
   try {
     const supabase = createAdminClient();
 
-    // Fetch products from Supabase
+    // Fetch real products directly from Supabase DB
     let query = supabase
       .from('products')
       .select(`
@@ -50,27 +49,13 @@ export async function GET(req: Request) {
 
     let productsList: Product[] = [];
 
-    if (!error && dbProducts && dbProducts.length > 0) {
+    if (!error && dbProducts) {
       productsList = dbProducts as Product[];
-    } else {
-      productsList = [...MOCK_PRODUCTS];
-    }
-
-    // Merge mock products if DB has fewer items so user always sees full catalog
-    if (productsList.length < MOCK_PRODUCTS.length && !slug) {
-      const dbIds = new Set(productsList.map((p) => p.id));
-      const dbSkus = new Set(productsList.map((p) => p.sku?.toUpperCase()));
-
-      MOCK_PRODUCTS.forEach((mockP) => {
-        if (!dbIds.has(mockP.id) && !dbSkus.has(mockP.sku?.toUpperCase())) {
-          productsList.push(mockP);
-        }
-      });
     }
 
     // Single product lookup by slug
     if (slug) {
-      const single = productsList.find((p) => p.slug === slug) || productsList[0] || null;
+      const single = productsList.find((p) => p.slug === slug) || null;
       return NextResponse.json(single);
     }
 
@@ -185,6 +170,6 @@ export async function GET(req: Request) {
     return NextResponse.json(filtered);
   } catch (err: any) {
     console.error('Error in GET /api/products:', err);
-    return NextResponse.json([...MOCK_PRODUCTS]);
+    return NextResponse.json([]);
   }
 }

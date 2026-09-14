@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { slugify } from '@/lib/utils';
-import { MOCK_PRODUCTS, BRANDS, CATEGORIES } from '@/lib/data/products';
+import { BRANDS, CATEGORIES } from '@/lib/data/products';
 import { Product } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -35,7 +35,7 @@ export async function GET(req: Request) {
 
     const { data, error } = await query;
 
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
       let filtered = data;
       if (brandSlug) {
         filtered = filtered.filter((p: any) => p.brand?.slug === brandSlug);
@@ -45,25 +45,11 @@ export async function GET(req: Request) {
       }
       return NextResponse.json(filtered);
     }
+    return NextResponse.json([]);
   } catch (err) {
     console.error('Error fetching admin products from Supabase:', err);
+    return NextResponse.json([]);
   }
-
-  // Fallback to MOCK_PRODUCTS
-  let result = [...MOCK_PRODUCTS];
-  if (search) {
-    result = result.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
-  }
-  if (brandSlug) {
-    result = result.filter((p) => p.brand?.slug === brandSlug);
-  }
-  if (categorySlug) {
-    result = result.filter((p) => p.category?.slug === categorySlug);
-  }
-  if (featured === 'true') {
-    result = result.filter((p) => p.featured);
-  }
-  return NextResponse.json(result);
 }
 
 export async function POST(req: Request) {

@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
-import { BRANDS, CATEGORIES } from '@/lib/data/products';
-import { FilterOptions } from '@/types';
+import React, { useState, useEffect } from 'react';
+import { BRANDS as FALLBACK_BRANDS, CATEGORIES as FALLBACK_CATEGORIES } from '@/lib/data/products';
+import { FilterOptions, Brand, Category } from '@/types';
 import { SlidersHorizontal, RotateCcw } from 'lucide-react';
 
 interface ProductFiltersProps {
@@ -14,6 +14,25 @@ interface ProductFiltersProps {
 const AVAILABLE_SIZES = ['37', '38', '39', '40', '41', '42', '43', '44', '45', 'P', 'M', 'G', 'GG'];
 
 export function ProductFilters({ filters, onFilterChange, onReset }: ProductFiltersProps) {
+  const [brands, setBrands] = useState<Brand[]>(FALLBACK_BRANDS as Brand[]);
+  const [categories, setCategories] = useState<Category[]>(FALLBACK_CATEGORIES as Category[]);
+
+  useEffect(() => {
+    async function loadMeta() {
+      try {
+        const res = await fetch('/api/admin/meta');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.brands && data.brands.length > 0) setBrands(data.brands);
+          if (data.categories && data.categories.length > 0) setCategories(data.categories);
+        }
+      } catch (err) {
+        console.error('Error fetching live filter meta:', err);
+      }
+    }
+    loadMeta();
+  }, []);
+
   const currentSizes = filters.sizes || [];
 
   const toggleSize = (size: string) => {
@@ -48,7 +67,7 @@ export function ProductFilters({ filters, onFilterChange, onReset }: ProductFilt
           MARCAS
         </h4>
         <div className="space-y-2">
-          {BRANDS.map((brand) => (
+          {brands.map((brand) => (
             <label key={brand.id} className="flex items-center gap-2.5 text-xs text-wolf-300 hover:text-white cursor-pointer select-none">
               <input
                 type="radio"
@@ -71,7 +90,7 @@ export function ProductFilters({ filters, onFilterChange, onReset }: ProductFilt
           CATEGORIA
         </h4>
         <div className="space-y-2">
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <label key={cat.id} className="flex items-center gap-2.5 text-xs text-wolf-300 hover:text-white cursor-pointer select-none">
               <input
                 type="radio"
