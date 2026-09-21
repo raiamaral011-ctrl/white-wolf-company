@@ -19,6 +19,7 @@ export async function GET(req: Request) {
   const q = searchParams.get('q') || searchParams.get('search');
   const sale = searchParams.get('sale');
   const featured = searchParams.get('featured');
+  const maratonaParam = searchParams.get('maratona') || searchParams.get('is_maratona');
 
   try {
     const supabase = createAdminClient();
@@ -44,6 +45,9 @@ export async function GET(req: Request) {
     if (sale === 'true') {
       query = query.eq('is_sale', true);
     }
+    if (maratonaParam === 'true') {
+      query = query.eq('is_maratona', true);
+    }
 
     const { data: dbProducts, error } = await query;
 
@@ -53,6 +57,12 @@ export async function GET(req: Request) {
       productsList = dbProducts as Product[];
     }
 
+    // Exclude Roupas and Acessórios from public catalog
+    productsList = productsList.filter((p) => {
+      const catSlug = p.category?.slug?.toLowerCase() || '';
+      return catSlug !== 'roupas' && catSlug !== 'acessorios';
+    });
+
     // Single product lookup by slug
     if (slug) {
       const single = productsList.find((p) => p.slug === slug) || null;
@@ -61,6 +71,11 @@ export async function GET(req: Request) {
 
     // APPLY STRICT FILTERS (AND LOGIC)
     let filtered = productsList;
+
+    // 0. MARATONA FILTER (Strict boolean)
+    if (maratonaParam === 'true') {
+      filtered = filtered.filter((p) => p.is_maratona === true);
+    }
 
     // 1. BRAND FILTER (Strict equality on brand slug or name)
     if (brandSlug && brandSlug.trim()) {

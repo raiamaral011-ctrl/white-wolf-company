@@ -40,7 +40,11 @@ export default function HomePage() {
         if (metaRes.ok) {
           const metaData = await metaRes.json();
           setBrands(metaData.brands || []);
-          setCategories(metaData.categories || []);
+          const shoeCats = (metaData.categories || []).filter((c: Category) => {
+            const slug = c.slug?.toLowerCase() || '';
+            return slug !== 'roupas' && slug !== 'acessorios';
+          });
+          setCategories(shoeCats);
         }
 
         // Fetch products for any 'products' sections
@@ -53,7 +57,7 @@ export default function HomePage() {
             if (source === 'nike') url = '/api/products?brand=nike';
             else if (source === 'adidas') url = '/api/products?brand=adidas';
             else if (source === 'tenis') url = '/api/products?category=tenis';
-            else if (source === 'roupas') url = '/api/products?category=roupas';
+            else if (source === 'maratona') url = '/api/products?maratona=true';
             else if (source === 'sale') url = '/api/products?sale=true';
 
             const res = await fetch(url);

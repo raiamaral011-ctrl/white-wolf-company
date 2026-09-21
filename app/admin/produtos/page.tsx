@@ -228,11 +228,18 @@ export default function AdminProdutosPage() {
                             )}
                             <div>
                               <span className="font-bold text-white block">{product.name}</span>
-                              {product.is_new && (
-                                <span className="text-[9px] bg-accent px-1.5 py-0.5 text-white font-bold uppercase rounded-xs">
-                                  NOVO
-                                </span>
-                              )}
+                              <div className="flex flex-wrap gap-1 mt-0.5">
+                                {product.is_new && (
+                                  <span className="text-[9px] bg-accent px-1.5 py-0.5 text-white font-bold uppercase rounded-xs">
+                                    NOVO
+                                  </span>
+                                )}
+                                {product.is_maratona && (
+                                  <span className="text-[9px] bg-emerald-950 border border-emerald-700 text-emerald-400 px-1.5 py-0.5 font-bold uppercase rounded-xs">
+                                    🏃 MARATONA
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </td>

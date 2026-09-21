@@ -11,11 +11,11 @@ interface ProductFiltersProps {
   onReset: () => void;
 }
 
-const AVAILABLE_SIZES = ['37', '38', '39', '40', '41', '42', '43', '44', '45', 'P', 'M', 'G', 'GG'];
+const AVAILABLE_SIZES = ['37', '38', '39', '40', '41', '42', '43', '44', '45'];
 
 export function ProductFilters({ filters, onFilterChange, onReset }: ProductFiltersProps) {
   const [brands, setBrands] = useState<Brand[]>(FALLBACK_BRANDS as Brand[]);
-  const [categories, setCategories] = useState<Category[]>(FALLBACK_CATEGORIES as Category[]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     async function loadMeta() {
@@ -24,7 +24,14 @@ export function ProductFilters({ filters, onFilterChange, onReset }: ProductFilt
         if (res.ok) {
           const data = await res.json();
           if (data.brands && data.brands.length > 0) setBrands(data.brands);
-          if (data.categories && data.categories.length > 0) setCategories(data.categories);
+          if (data.categories && data.categories.length > 0) {
+            // Exclude roupas and acessorios
+            const shoeCategories = data.categories.filter((c: Category) => {
+              const slug = c.slug?.toLowerCase() || '';
+              return slug !== 'roupas' && slug !== 'acessorios';
+            });
+            setCategories(shoeCategories);
+          }
         }
       } catch (err) {
         console.error('Error fetching live filter meta:', err);
@@ -61,6 +68,22 @@ export function ProductFilters({ filters, onFilterChange, onReset }: ProductFilt
         </button>
       </div>
 
+      {/* MARATONA FILTER TOGGLE */}
+      <div className="p-3 bg-emerald-950/40 border border-emerald-800/80 rounded-xs space-y-2">
+        <label className="flex items-center gap-2.5 text-xs text-emerald-300 font-bold font-mono cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={!!filters.isMaratona}
+            onChange={(e) => onFilterChange({ ...filters, isMaratona: e.target.checked ? true : undefined })}
+            className="accent-emerald-500 w-4 h-4"
+          />
+          <span>🏃 SELEÇÃO MARATONA</span>
+        </label>
+        <p className="text-[10px] text-emerald-400/80 font-mono leading-tight pl-6">
+          Exibir somente calçados de alta tecnologia para corrida de rua e maratona.
+        </p>
+      </div>
+
       {/* MARCAS */}
       <div className="space-y-3">
         <h4 className="text-[11px] font-bold uppercase tracking-wider text-wolf-300 font-mono">
@@ -85,27 +108,29 @@ export function ProductFilters({ filters, onFilterChange, onReset }: ProductFilt
       </div>
 
       {/* CATEGORIAS */}
-      <div className="space-y-3 pt-4 border-t border-wolf-800">
-        <h4 className="text-[11px] font-bold uppercase tracking-wider text-wolf-300 font-mono">
-          CATEGORIA
-        </h4>
-        <div className="space-y-2">
-          {categories.map((cat) => (
-            <label key={cat.id} className="flex items-center gap-2.5 text-xs text-wolf-300 hover:text-white cursor-pointer select-none">
-              <input
-                type="radio"
-                name="category"
-                checked={filters.categorySlug === cat.slug}
-                onChange={() => onFilterChange({ ...filters, categorySlug: filters.categorySlug === cat.slug ? undefined : cat.slug })}
-                className="accent-rose-600 bg-wolf-900 border-wolf-700"
-              />
-              <span className={filters.categorySlug === cat.slug ? 'text-accent font-bold' : ''}>
-                {cat.name}
-              </span>
-            </label>
-          ))}
+      {categories.length > 0 && (
+        <div className="space-y-3 pt-4 border-t border-wolf-800">
+          <h4 className="text-[11px] font-bold uppercase tracking-wider text-wolf-300 font-mono">
+            CATEGORIA
+          </h4>
+          <div className="space-y-2">
+            {categories.map((cat) => (
+              <label key={cat.id} className="flex items-center gap-2.5 text-xs text-wolf-300 hover:text-white cursor-pointer select-none">
+                <input
+                  type="radio"
+                  name="category"
+                  checked={filters.categorySlug === cat.slug}
+                  onChange={() => onFilterChange({ ...filters, categorySlug: filters.categorySlug === cat.slug ? undefined : cat.slug })}
+                  className="accent-rose-600 bg-wolf-900 border-wolf-700"
+                />
+                <span className={filters.categorySlug === cat.slug ? 'text-accent font-bold' : ''}>
+                  {cat.name}
+                </span>
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* GÊNERO */}
       <div className="space-y-3 pt-4 border-t border-wolf-800">
@@ -138,7 +163,7 @@ export function ProductFilters({ filters, onFilterChange, onReset }: ProductFilt
       {/* TAMANHO */}
       <div className="space-y-3 pt-4 border-t border-wolf-800">
         <h4 className="text-[11px] font-bold uppercase tracking-wider text-wolf-300 font-mono">
-          TAMANHO
+          TAMANHO (BR)
         </h4>
         <div className="grid grid-cols-4 gap-1.5 font-mono text-xs">
           {AVAILABLE_SIZES.map((sz) => {

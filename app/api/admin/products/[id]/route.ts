@@ -50,6 +50,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       featured,
       is_new,
       is_sale,
+      is_maratona,
       media,
       variants,
     } = body;
@@ -105,6 +106,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         featured: !!featured,
         is_new: !!is_new,
         is_sale: !!is_sale,
+        is_maratona: !!is_maratona,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)

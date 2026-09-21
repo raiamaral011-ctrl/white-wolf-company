@@ -68,6 +68,7 @@ export interface Product {
   featured: boolean;
   is_new: boolean;
   is_sale: boolean;
+  is_maratona?: boolean;
   rating: number;
   review_count: number;
   created_at: string;
@@ -183,6 +184,7 @@ export interface FilterOptions {
   brandSlug?: string;
   categorySlug?: string;
   gender?: string;
+  isMaratona?: boolean;
   minPrice?: number;
   maxPrice?: number;
   sizes?: string[];

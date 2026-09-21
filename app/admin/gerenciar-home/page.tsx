@@ -735,12 +735,12 @@ export default function AdminGerenciarHomePage() {
                       }
                       className="w-full bg-wolf-950 border border-wolf-800 text-white text-xs px-3 py-2 font-mono"
                     >
-                      <option value="all">Todos os Produtos do Banco</option>
-                      <option value="nike">Apenas Produtos Nike</option>
-                      <option value="adidas">Apenas Produtos Adidas</option>
+                      <option value="all">Todos os Tênis do Banco</option>
+                      <option value="nike">Apenas Tênis Nike</option>
+                      <option value="adidas">Apenas Tênis Adidas</option>
                       <option value="tenis">Apenas Categoria Tênis</option>
-                      <option value="roupas">Apenas Categoria Roupas</option>
-                      <option value="sale">Apenas Produtos em Promoção</option>
+                      <option value="maratona">🏃 Apenas Tênis de Maratona (Alta Performance)</option>
+                      <option value="sale">Apenas Tênis em Promoção (Ofertas)</option>
                     </select>
                   </div>
                 )}

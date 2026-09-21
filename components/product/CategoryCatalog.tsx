@@ -15,6 +15,7 @@ interface CategoryCatalogProps {
   categorySlug?: string;
   brandSlug?: string;
   genderFilter?: string;
+  isMaratona?: boolean;
   onlySale?: boolean;
 }
 
@@ -24,6 +25,7 @@ export function CategoryCatalog({
   categorySlug,
   brandSlug,
   genderFilter,
+  isMaratona,
   onlySale,
 }: CategoryCatalogProps) {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -33,6 +35,7 @@ export function CategoryCatalog({
     categorySlug,
     brandSlug,
     gender: genderFilter,
+    isMaratona,
     sort: 'relevance',
   });
 
@@ -43,10 +46,11 @@ export function CategoryCatalog({
       categorySlug: categorySlug ?? prev.categorySlug,
       brandSlug: brandSlug ?? prev.brandSlug,
       gender: genderFilter ?? prev.gender,
+      isMaratona: isMaratona ?? prev.isMaratona,
     }));
-  }, [categorySlug, brandSlug, genderFilter]);
+  }, [categorySlug, brandSlug, genderFilter, isMaratona]);
 
-  // Fetch live products from API (Supabase-backed, fallback to mock)
+  // Fetch live products from API (Supabase-backed)
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -55,6 +59,7 @@ export function CategoryCatalog({
         if (filters.categorySlug) params.set('category', filters.categorySlug);
         if (filters.brandSlug) params.set('brand', filters.brandSlug);
         if (filters.gender) params.set('gender', filters.gender);
+        if (filters.isMaratona) params.set('maratona', 'true');
         if (filters.minPrice !== undefined) params.set('minPrice', String(filters.minPrice));
         if (filters.maxPrice !== undefined) params.set('maxPrice', String(filters.maxPrice));
         if (filters.sort) params.set('sort', filters.sort);
@@ -63,13 +68,13 @@ export function CategoryCatalog({
         const res = await fetch(`/api/products?${params.toString()}`);
         if (res.ok) {
           const data: Product[] = await res.json();
-          setAllProducts(data);
+          setAllProducts(data || []);
         } else {
-          setAllProducts([...MOCK_PRODUCTS]);
+          setAllProducts([]);
         }
       } catch (err) {
         console.error('Error fetching catalog products:', err);
-        setAllProducts([...MOCK_PRODUCTS]);
+        setAllProducts([]);
       } finally {
         setLoading(false);
       }
@@ -80,6 +85,7 @@ export function CategoryCatalog({
     filters.categorySlug,
     filters.brandSlug,
     filters.gender,
+    filters.isMaratona,
     filters.minPrice,
     filters.maxPrice,
     filters.sort,
@@ -89,6 +95,9 @@ export function CategoryCatalog({
 
   // STRICT CLIENT-SIDE AND FILTERING AS EXTRA GUARANTEE
   const displayedProducts = allProducts.filter((p) => {
+    // 0. Maratona Check
+    if (filters.isMaratona && !p.is_maratona) return false;
+
     // 1. Sale check
     if (onlySale && !p.is_sale) return false;
 

@@ -45,61 +45,33 @@ export function Header() {
         <nav className="hidden lg:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-wolf-300">
           {/* Tênis Dropdown */}
           <div className="relative group py-6">
-            <Link href="/tenis" className="flex items-center gap-1 hover:text-white transition-colors">
-              TÊNIS
+            <Link href="/produtos" className="flex items-center gap-1 hover:text-white transition-colors">
+              TODOS OS TÊNIS
               <ChevronDown className="w-3.5 h-3.5 text-wolf-500 group-hover:text-white transition-transform group-hover:rotate-180" />
             </Link>
-            <div className="absolute top-full left-0 hidden group-hover:block w-48 bg-wolf-900 border border-wolf-800 shadow-xl p-3 space-y-2">
-              <Link href="/tenis/masculino" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1">
-                MASCULINO
+            <div className="absolute top-full left-0 hidden group-hover:block w-52 bg-wolf-900 border border-wolf-800 shadow-xl p-3 space-y-2">
+              <Link href="/produtos?genero=masculino" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1">
+                TÊNIS MASCULINO
               </Link>
-              <Link href="/tenis/feminino" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1">
-                FEMININO
+              <Link href="/produtos?genero=feminino" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1">
+                TÊNIS FEMININO
               </Link>
-              <Link href="/tenis/infantil" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1">
-                INFANTIL
+              <Link href="/produtos?genero=infantil" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1">
+                TÊNIS INFANTIL
+              </Link>
+              <Link href="/maratona" className="block text-emerald-400 hover:text-emerald-300 font-mono text-xs py-1 border-t border-wolf-800 pt-2 font-bold">
+                🏃 TÊNIS MARATONA
               </Link>
             </div>
           </div>
 
-          {/* Roupas Dropdown */}
-          <div className="relative group py-6">
-            <Link href="/roupas" className="flex items-center gap-1 hover:text-white transition-colors">
-              ROUPAS
-              <ChevronDown className="w-3.5 h-3.5 text-wolf-500 group-hover:text-white transition-transform group-hover:rotate-180" />
-            </Link>
-            <div className="absolute top-full left-0 hidden group-hover:block w-48 bg-wolf-900 border border-wolf-800 shadow-xl p-3 space-y-2">
-              <Link href="/roupas/masculino" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1">
-                MASCULINO
-              </Link>
-              <Link href="/roupas/feminino" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1">
-                FEMININO
-              </Link>
-              <Link href="/roupas/camisetas" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1">
-                CAMISETAS
-              </Link>
-              <Link href="/roupas/shorts" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1">
-                SHORTS
-              </Link>
-              <Link href="/roupas/calcas" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1">
-                CALÇAS
-              </Link>
-              <Link href="/roupas/jaquetas" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1">
-                JAQUETAS
-              </Link>
-            </div>
-          </div>
-
-          <Link href="/acessorios" className="hover:text-white transition-colors">
-            ACESSÓRIOS
+          <Link href="/maratona" className="text-emerald-400 font-extrabold hover:text-emerald-300 transition-colors flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            MARATONA
           </Link>
 
           <Link href="/marcas" className="hover:text-white transition-colors">
             MARCAS
-          </Link>
-
-          <Link href="/maratona" className="text-emerald-400 font-extrabold hover:text-emerald-300 transition-colors">
-            MARATONA
           </Link>
 
           <Link href="/ofertas" className="text-accent font-extrabold hover:text-rose-400 transition-colors flex items-center gap-1">
@@ -152,34 +124,22 @@ export function Header() {
       {/* MOBILE NAVIGATION DRAWER */}
       {isMobileMenuOpen && (
         <div className="lg:hidden bg-wolf-950 border-b border-wolf-800 p-6 space-y-4 text-xs font-bold uppercase tracking-widest text-wolf-300">
-          <Link href="/tenis" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 border-b border-wolf-800 text-white">
-            Tênis
+          <Link href="/produtos" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 border-b border-wolf-800 text-white">
+            Todos os Tênis
           </Link>
           <div className="pl-4 space-y-2 font-mono text-[11px] text-wolf-400">
-            <Link href="/tenis/masculino" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">Tênis Masculino</Link>
-            <Link href="/tenis/feminino" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">Tênis Feminino</Link>
+            <Link href="/produtos?genero=masculino" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">Tênis Masculino</Link>
+            <Link href="/produtos?genero=feminino" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">Tênis Feminino</Link>
+            <Link href="/produtos?genero=infantil" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">Tênis Infantil</Link>
           </div>
 
-          <Link href="/roupas" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 border-b border-wolf-800 text-white">
-            Roupas
-          </Link>
-          <div className="pl-4 space-y-2 font-mono text-[11px] text-wolf-400">
-            <Link href="/roupas/camisetas" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">Camisetas</Link>
-            <Link href="/roupas/shorts" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">Shorts</Link>
-            <Link href="/roupas/calcas" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">Calças</Link>
-            <Link href="/roupas/jaquetas" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">Jaquetas</Link>
-          </div>
-
-          <Link href="/acessorios" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 border-b border-wolf-800 text-white">
-            Acessórios
+          <Link href="/maratona" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 border-b border-wolf-800 text-emerald-400 font-extrabold flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            🏃 Maratona (Alta Performance)
           </Link>
 
           <Link href="/marcas" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 border-b border-wolf-800 text-white">
             Marcas
-          </Link>
-
-          <Link href="/maratona" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 border-b border-wolf-800 text-emerald-400 font-extrabold">
-            🏃 Maratona
           </Link>
 
           <Link href="/ofertas" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-accent font-extrabold">

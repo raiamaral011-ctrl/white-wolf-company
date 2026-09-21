@@ -68,6 +68,7 @@ export async function POST(req: Request) {
       featured,
       is_new,
       is_sale,
+      is_maratona,
       media,
       variants,
     } = body;
@@ -125,6 +126,7 @@ export async function POST(req: Request) {
         featured: !!featured,
         is_new: !!is_new,
         is_sale: !!is_sale,
+        is_maratona: !!is_maratona,
         rating: 5.0,
         review_count: 1,
       })

@@ -51,6 +51,7 @@ export default function AdminEditProdutoPage({ params }: { params: { id: string 
     featured: false,
     is_new: false,
     is_sale: false,
+    is_maratona: false,
   });
 
   const [brands, setBrands] = useState<BrandOption[]>([]);
@@ -113,6 +114,7 @@ export default function AdminEditProdutoPage({ params }: { params: { id: string 
             featured: !!product.featured,
             is_new: !!product.is_new,
             is_sale: !!product.is_sale,
+            is_maratona: !!product.is_maratona,
           });
 
           // Load variants
@@ -496,13 +498,14 @@ export default function AdminEditProdutoPage({ params }: { params: { id: string 
                     { key: 'featured', label: 'DESTACAR NA HOME' },
                     { key: 'is_new', label: 'MARCAR COMO NOVIDADE' },
                     { key: 'is_sale', label: 'MARCAR EM PROMOÇÃO' },
+                    { key: 'is_maratona', label: '🏃 MARATONA (TÊNIS DE ALTA PERFORMANCE / CORRIDA)' },
                   ].map(({ key, label }) => (
-                    <label key={key} className="flex items-center gap-2 text-xs font-mono text-wolf-300 cursor-pointer">
+                    <label key={key} className={`flex items-center gap-2 text-xs font-mono cursor-pointer ${key === 'is_maratona' ? 'text-emerald-400 font-bold bg-emerald-950/40 border border-emerald-800/60 px-3 py-1.5 rounded-xs' : 'text-wolf-300'}`}>
                       <input
                         type="checkbox"
                         checked={formData[key as keyof typeof formData] as boolean}
                         onChange={e => setFormData({ ...formData, [key]: e.target.checked })}
-                        className="accent-rose-600 w-4 h-4"
+                        className="accent-emerald-500 w-4 h-4"
                       />
                       {label}
                     </label>

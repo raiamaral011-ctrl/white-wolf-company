@@ -81,7 +81,7 @@ export function Footer() {
             WHITE WOLF <span className="text-accent font-light">CO.</span>
           </span>
           <p className="text-wolf-400 text-xs leading-relaxed">
-            Plataforma premium de e-commerce esportivo especializada em tênis de alta performance, artigos de treino, vestuário técnico e lifestyle urbano.
+            Plataforma premium de e-commerce esportivo especializada exclusivamente em tênis de alta performance, corrida, maratona e lifestyle urbano.
           </p>
           <div className="flex gap-3 text-wolf-400 pt-2">
             <a href="#" className="p-2 bg-wolf-900 border border-wolf-800 hover:text-accent transition-colors"><Instagram className="w-4 h-4" /></a>
