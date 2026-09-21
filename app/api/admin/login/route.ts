@@ -19,44 +19,69 @@ export async function POST(req: Request) {
     const supabase = createAdminClient();
 
     // Determine email for Supabase Auth
-    let emailToAuth = normalizedUser;
-    if (!emailToAuth.includes('@')) {
-      emailToAuth = `${normalizedUser}@whitewolf.com`;
+    let emailsToTry: string[] = [];
+    if (normalizedUser.includes('@')) {
+      emailsToTry.push(normalizedUser);
+    } else {
+      emailsToTry.push(`${normalizedUser}@whitewolf.com`);
+      if (normalizedUser === 'guillermo') emailsToTry.push('guillhermo@whitewolf.com');
+      if (normalizedUser === 'guillhermo') emailsToTry.push('guillermo@whitewolf.com');
     }
-
-    // Try authenticating with Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: emailToAuth,
-      password: providedPass,
-    });
 
     let adminUser: { username: string; email: string; role: string; id?: string } | null = null;
 
-    if (!authError && authData?.user) {
-      // Check role in profiles or user_metadata
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role, full_name')
-        .eq('user_id', authData.user.id)
-        .single();
+    // Try authenticating with Supabase Auth
+    for (const emailToAuth of emailsToTry) {
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: emailToAuth,
+        password: providedPass,
+      });
 
-      const userRole = profile?.role || authData.user.user_metadata?.role;
+      if (!authError && authData?.user) {
+        // Check role in profiles or user_metadata
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role, full_name')
+          .eq('user_id', authData.user.id)
+          .single();
 
-      if (userRole === 'admin' || userRole === 'master_admin') {
-        adminUser = {
-          id: authData.user.id,
-          username: authData.user.user_metadata?.username || normalizedUser.split('@')[0],
-          email: authData.user.email || emailToAuth,
-          role: profile?.role === 'master_admin' ? 'Administrador Master' : 'Administrador',
-        };
+        const userRole = profile?.role || authData.user.user_metadata?.role;
+
+        if (userRole === 'admin' || userRole === 'master_admin') {
+          adminUser = {
+            id: authData.user.id,
+            username: authData.user.user_metadata?.username || normalizedUser.split('@')[0],
+            email: authData.user.email || emailToAuth,
+            role: profile?.role === 'master_admin' ? 'Administrador Master' : 'Administrador',
+          };
+          break;
+        } else {
+          // Found user but role is customer or not admin
+          return NextResponse.json(
+            {
+              success: false,
+              message: 'Acesso negado: Este usuário não possui privilégios de administrador.',
+            },
+            { status: 403 }
+          );
+        }
       }
     }
 
     // Fallback for known admin users if auth API didn't resolve directly
     if (!adminUser) {
       if (
-        (normalizedUser === 'rianhenrique' && providedPass === 'guizinho77') ||
-        (normalizedUser === 'rianhenrique@whitewolf.com' && providedPass === 'guizinho77')
+        (normalizedUser === 'guillermo' || normalizedUser === 'guillhermo' || normalizedUser === 'guillermo@whitewolf.com' || normalizedUser === 'guillhermo@whitewolf.com') &&
+        providedPass === 'guizinho77'
+      ) {
+        adminUser = {
+          username: 'guillermo',
+          email: 'guillermo@whitewolf.com',
+          role: 'Administrador',
+        };
+      } else if (
+        (normalizedUser === 'rianhenrique' || normalizedUser === 'rianhenrique@whitewolf.com') &&
+        providedPass === 'rianroludo'
       ) {
         adminUser = {
           username: 'rianhenrique',
@@ -64,15 +89,9 @@ export async function POST(req: Request) {
           role: 'Administrador',
         };
       } else if (
-        (normalizedUser === 'guillhermo' && providedPass === 'rianroludo') ||
-        (normalizedUser === 'guillhermo@whitewolf.com' && providedPass === 'rianroludo')
+        (normalizedUser === 'raiamaral' || normalizedUser === 'raiamaral@whitewolf.com') &&
+        providedPass === 'R41@m4r@1'
       ) {
-        adminUser = {
-          username: 'guillhermo',
-          email: 'guillhermo@whitewolf.com',
-          role: 'Administrador',
-        };
-      } else if (normalizedUser === 'raiamaral' && providedPass === 'R41@m4r@1') {
         adminUser = {
           username: 'raiamaral',
           email: 'raiamaral@whitewolf.com',
