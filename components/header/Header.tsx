@@ -7,7 +7,8 @@ import { useFavorites } from '@/context/favorites-context';
 import { BrandBar } from './BrandBar';
 import { CartDrawer } from './CartDrawer';
 import { SearchModal } from './SearchModal';
-import { Search, Heart, ShoppingBag, User, Menu, X, ChevronDown } from 'lucide-react';
+import { UserMenu } from './UserMenu';
+import { Search, Heart, ShoppingBag, Menu, X, ChevronDown } from 'lucide-react';
 
 export function Header() {
   const { itemCount, setIsCartOpen } = useCart();
@@ -118,14 +119,8 @@ export function Header() {
             <Search className="w-5 h-5" />
           </button>
 
-          {/* Account */}
-          <Link
-            href="/minha-conta"
-            className="p-2 text-wolf-300 hover:text-white transition-colors"
-            title="Minha Conta"
-          >
-            <User className="w-5 h-5" />
-          </Link>
+          {/* Account User Menu Dropdown */}
+          <UserMenu />
 
           {/* Favorites */}
           <Link

@@ -11,10 +11,14 @@ export async function GET() {
 
   try {
     const data = JSON.parse(Buffer.from(token.value, 'base64').toString('utf-8'));
-    if (data && data.user === 'raiamaral') {
+    if (data && (data.user || data.email) && (data.role?.toLowerCase().includes('admin') || data.role === 'admin')) {
       return NextResponse.json({
         authenticated: true,
-        user: { username: 'raiamaral', role: 'Administrador Master' },
+        user: { 
+          username: data.user, 
+          email: data.email, 
+          role: data.role || 'Administrador' 
+        },
       });
     }
   } catch (err) {
@@ -23,3 +27,4 @@ export async function GET() {
 
   return NextResponse.json({ authenticated: false }, { status: 401 });
 }
+

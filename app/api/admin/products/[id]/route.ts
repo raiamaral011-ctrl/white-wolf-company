@@ -29,12 +29,6 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     console.error('Error fetching product detail:', err);
   }
 
-  // Fallback to MOCK_PRODUCTS
-  const foundMock = MOCK_PRODUCTS.find((p) => p.id === id);
-  if (foundMock) {
-    return NextResponse.json(foundMock);
-  }
-
   return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 });
 }
 

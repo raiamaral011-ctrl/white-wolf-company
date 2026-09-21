@@ -196,3 +196,44 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, message: 'ID do produto não informado.' },
+        { status: 400 }
+      );
+    }
+
+    const supabase = createAdminClient();
+
+    // 1. Delete associated variants and images
+    await supabase.from('product_variants').delete().eq('product_id', id);
+    await supabase.from('product_images').delete().eq('product_id', id);
+
+    // 2. Delete the product
+    const { error } = await supabase.from('products').delete().eq('id', id);
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, message: 'Erro ao excluir produto no Supabase: ' + error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Produto excluído com sucesso do banco de dados.',
+    });
+  } catch (err: any) {
+    return NextResponse.json(
+      { success: false, message: 'Erro interno ao excluir: ' + err.message },
+      { status: 500 }
+    );
+  }
+}
+

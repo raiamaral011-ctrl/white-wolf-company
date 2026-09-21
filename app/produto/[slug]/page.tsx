@@ -20,9 +20,7 @@ interface ProductPageProps {
 }
 
 export default function ProductDetailPage({ params }: ProductPageProps) {
-  const [product, setProduct] = useState<Product | null>(() => {
-    return MOCK_PRODUCTS.find((p) => p.slug === params.slug) || null;
-  });
+  const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
   const { addItem } = useCart();
