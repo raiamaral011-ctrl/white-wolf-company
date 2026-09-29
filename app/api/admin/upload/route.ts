@@ -33,10 +33,21 @@ export async function POST(req: Request) {
     const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '-').toLowerCase();
     const path = `${folder}/${timestamp}-${safeName}`;
 
+    let resolvedContentType = contentType;
+    if (!resolvedContentType || resolvedContentType === 'application/octet-stream') {
+      if (safeName.endsWith('.avif')) resolvedContentType = 'image/avif';
+      else if (safeName.endsWith('.webp')) resolvedContentType = 'image/webp';
+      else if (safeName.endsWith('.png')) resolvedContentType = 'image/png';
+      else if (safeName.endsWith('.svg')) resolvedContentType = 'image/svg+xml';
+      else if (safeName.endsWith('.mp4')) resolvedContentType = 'video/mp4';
+      else if (safeName.endsWith('.webm')) resolvedContentType = 'video/webm';
+      else resolvedContentType = 'image/jpeg';
+    }
+
     const { data, error } = await supabase.storage
       .from('product-media')
       .upload(path, buffer, {
-        contentType: contentType || 'image/jpeg',
+        contentType: resolvedContentType,
         upsert: true,
       });
 

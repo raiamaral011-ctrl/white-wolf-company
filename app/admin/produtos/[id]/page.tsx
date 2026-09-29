@@ -458,6 +458,22 @@ export default function AdminEditProdutoPage({ params }: { params: { id: string 
                 </div>
 
                 <div>
+                  <label className="text-xs font-mono text-wolf-300 block mb-1">MODALIDADE / ESPORTE</label>
+                  <select
+                    value={formData.sport}
+                    onChange={e => setFormData({ ...formData, sport: e.target.value })}
+                    className="w-full bg-wolf-950 border border-wolf-800 px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-accent rounded-xs"
+                  >
+                    <option value="running">Corrida / Maratona</option>
+                    <option value="marathon">Maratona de Alta Performance</option>
+                    <option value="training">Treino & Academia</option>
+                    <option value="lifestyle">Casual & Lifestyle</option>
+                    <option value="basketball">Basquete</option>
+                    <option value="general">Geral / Multi-Esporte</option>
+                  </select>
+                </div>
+
+                <div>
                   <label className="text-xs font-mono text-wolf-300 block mb-1">PREÇO (R$) *</label>
                   <input
                     type="number"
@@ -510,6 +526,16 @@ export default function AdminEditProdutoPage({ params }: { params: { id: string 
                       {label}
                     </label>
                   ))}
+
+                  <label className="flex items-center gap-2 text-xs font-mono text-emerald-400 font-bold cursor-pointer bg-emerald-950/40 border border-emerald-800/60 px-3 py-1.5 rounded-xs">
+                    <input
+                      type="checkbox"
+                      checked={formData.sport === 'marathon' || formData.sport === 'running'}
+                      onChange={e => setFormData({ ...formData, sport: e.target.checked ? 'marathon' : 'general' })}
+                      className="accent-emerald-500 w-4 h-4"
+                    />
+                    🏃 MARATONA (EXIBIR NA SEÇÃO MARATONA)
+                  </label>
                 </div>
               </div>
 
@@ -530,10 +556,10 @@ export default function AdminEditProdutoPage({ params }: { params: { id: string 
             <div className="bg-wolf-900 border border-wolf-800 p-8 space-y-6 rounded-sm">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-widest text-wolf-300">
-                  IMAGENS E VÍDEOS DO PRODUTO
+                  IMAGENS E VÍDEOS DO PRODUTO (AVIF, WEBP, PNG, JPG)
                 </h2>
                 <p className="text-[11px] font-mono text-wolf-500 mt-1">
-                  Adicione ou remova imagens e vídeos. O primeiro item de imagem será a foto de capa da loja.
+                  Adicione ou remova imagens e vídeos. Você pode clicar em &quot;TORNAR PRINCIPAL&quot; para definir qual imagem será a foto de capa da loja.
                 </p>
               </div>
 
@@ -542,7 +568,7 @@ export default function AdminEditProdutoPage({ params }: { params: { id: string 
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+                  accept="image/avif,image/webp,image/jpeg,image/jpg,image/png,image/gif,video/mp4,video/webm"
                   multiple
                   onChange={handleFileSelect}
                   className="hidden"
@@ -558,7 +584,7 @@ export default function AdminEditProdutoPage({ params }: { params: { id: string 
                       CLIQUE PARA ENVIAR NOVO ARQUIVO
                     </p>
                     <p className="text-[11px] text-wolf-500 mt-1">
-                      Imagens (JPG, PNG, WEBP) ou Vídeos (MP4) • Máx. 50MB
+                      Imagens (AVIF, WEBP, JPG, PNG) ou Vídeos (MP4, WEBM) • Máx. 50MB
                     </p>
                   </div>
                 </label>
@@ -615,11 +641,28 @@ export default function AdminEditProdutoPage({ params }: { params: { id: string 
                         media.uploadError ? 'border-rose-600' : 'border-wolf-700'
                       }`}
                     >
-                      {index === 0 && (
-                        <span className="absolute top-2 left-2 z-10 bg-accent text-white text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded-xs">
-                          CAPA
-                        </span>
-                      )}
+                      {/* Set as Main Cover */}
+                      <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
+                        {index === 0 ? (
+                          <span className="bg-accent text-white text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded-xs">
+                            ★ PRINCIPAL / CAPA
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = [...mediaFiles];
+                              const [selected] = updated.splice(index, 1);
+                              updated.unshift(selected);
+                              setMediaFiles(updated);
+                            }}
+                            className="bg-wolf-950/90 hover:bg-accent text-wolf-300 hover:text-white text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded-xs border border-wolf-700 transition-colors"
+                            title="Definir esta imagem como capa principal"
+                          >
+                            TORNAR PRINCIPAL
+                          </button>
+                        )}
+                      </div>
 
                       <span className="absolute top-2 right-8 z-10 bg-black/70 text-white text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded-xs flex items-center gap-0.5">
                         {media.type === 'video' ? <Film className="w-2.5 h-2.5" /> : <ImageIcon className="w-2.5 h-2.5" />}

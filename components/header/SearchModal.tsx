@@ -17,6 +17,7 @@ interface SearchModalProps {
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -25,16 +26,36 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
       return;
     }
 
-    const q = query.toLowerCase();
-    const filtered = MOCK_PRODUCTS.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.brand?.name.toLowerCase().includes(q) ||
-        p.category?.name.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q)
-    ).slice(0, 6);
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/products?q=${encodeURIComponent(query)}`);
+        if (res.ok) {
+          const data: Product[] = await res.json();
+          setResults(data.slice(0, 6));
+        } else {
+          fallbackSearch();
+        }
+      } catch {
+        fallbackSearch();
+      } finally {
+        setLoading(false);
+      }
+    }, 250);
 
-    setResults(filtered);
+    const fallbackSearch = () => {
+      const q = query.toLowerCase();
+      const filtered = MOCK_PRODUCTS.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.brand?.name.toLowerCase().includes(q) ||
+          p.category?.name.toLowerCase().includes(q) ||
+          p.sku.toLowerCase().includes(q)
+      ).slice(0, 6);
+      setResults(filtered);
+    };
+
+    return () => clearTimeout(timer);
   }, [query]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {

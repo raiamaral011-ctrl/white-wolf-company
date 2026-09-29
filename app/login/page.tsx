@@ -21,18 +21,46 @@ export default function LoginPage() {
     setErrorMsg('');
 
     try {
+      const cleanInput = (email || '').trim().toLowerCase();
+      let targetEmail = cleanInput;
+
+      if (!targetEmail.includes('@')) {
+        targetEmail = `${cleanInput}@whitewolf.com`;
+      }
+
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: targetEmail,
         password,
       });
 
-      if (error) {
-        throw new Error(error.message || 'Credenciais inválidas.');
+      if (error || !data.user) {
+        throw new Error(error?.message || 'Credenciais inválidas.');
       }
 
-      router.push('/minha-conta');
-      router.refresh();
+      // Check role in profiles
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', data.user.id)
+        .single();
+
+      if (profile?.role === 'admin') {
+        // Also establish admin token cookie
+        try {
+          await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: targetEmail, password }),
+          });
+        } catch {}
+
+        router.push('/admin');
+        router.refresh();
+      } else {
+        router.push('/minha-conta');
+        router.refresh();
+      }
     } catch (err: any) {
       setErrorMsg(err.message || 'Erro ao realizar login. Tente novamente.');
     } finally {

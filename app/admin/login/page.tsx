@@ -94,7 +94,7 @@ export default function AdminLoginPage() {
             <div className="space-y-1.5">
               <label className="text-xs font-mono uppercase font-bold text-wolf-300 flex items-center gap-2">
                 <User className="w-3.5 h-3.5 text-wolf-400" />
-                Usuário Master
+                Usuário / E-mail Admin
               </label>
               <input
                 type="text"
@@ -102,7 +102,7 @@ export default function AdminLoginPage() {
                 autoComplete="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Ex: raiamaral"
+                placeholder="Ex: guillermo ou rianhenrique"
                 className="w-full bg-wolf-900/90 border border-wolf-700 focus:border-accent text-white px-3.5 py-2.5 rounded-xs text-sm font-mono placeholder:text-wolf-600 focus:outline-none transition-colors"
               />
             </div>

@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { createAdminClient } from '@/lib/supabase/admin';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const cookieStore = cookies();
@@ -10,19 +13,38 @@ export async function GET() {
   }
 
   try {
-    const data = JSON.parse(Buffer.from(token.value, 'base64').toString('utf-8'));
-    if (data && (data.user || data.email) && (data.role?.toLowerCase().includes('admin') || data.role === 'admin')) {
-      return NextResponse.json({
-        authenticated: true,
-        user: { 
-          username: data.user, 
-          email: data.email, 
-          role: data.role || 'Administrador' 
-        },
-      });
+    const payload = JSON.parse(Buffer.from(token.value, 'base64').toString('utf-8'));
+
+    if (payload && (payload.userId || payload.user || payload.email)) {
+      const adminSupabase = createAdminClient();
+      
+      let query = adminSupabase
+        .from('profiles')
+        .select('id, user_id, full_name, email, role')
+        .eq('role', 'admin');
+
+      if (payload.userId) {
+        query = query.eq('user_id', payload.userId);
+      } else if (payload.email) {
+        query = query.eq('email', payload.email);
+      }
+
+      const { data: profile, error } = await query.single();
+
+      if (!error && profile) {
+        return NextResponse.json({
+          authenticated: true,
+          user: {
+            id: profile.user_id,
+            username: profile.full_name || profile.email,
+            email: profile.email,
+            role: 'admin',
+          },
+        });
+      }
     }
   } catch (err) {
-    // invalid token
+    console.error('Session verification error:', err);
   }
 
   return NextResponse.json({ authenticated: false }, { status: 401 });

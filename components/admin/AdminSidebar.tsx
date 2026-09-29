@@ -8,6 +8,26 @@ import { LayoutDashboard, Home, Package, ShoppingBag, Users, Layers, Tag, ArrowL
 export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [currentUser, setCurrentUser] = React.useState<{ username: string; email: string; role: string }>({
+    username: 'Administrador',
+    email: '',
+    role: 'admin',
+  });
+
+  React.useEffect(() => {
+    async function loadUser() {
+      try {
+        const res = await fetch('/api/admin/session');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated && data.user) {
+            setCurrentUser(data.user);
+          }
+        }
+      } catch {}
+    }
+    loadUser();
+  }, []);
 
   const links = [
     { href: '/admin', label: 'DASHBOARD', icon: LayoutDashboard },
@@ -30,6 +50,10 @@ export function AdminSidebar() {
     }
   };
 
+  const initials = (currentUser.username || currentUser.email || 'AD')
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <aside className="w-full lg:w-64 bg-wolf-950 border-r border-wolf-800 p-6 space-y-8 flex flex-col justify-between shrink-0">
       <div className="space-y-6">
@@ -48,14 +72,14 @@ export function AdminSidebar() {
         {/* User Card */}
         <div className="p-3 bg-wolf-900/60 border border-wolf-800 rounded-xs flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center font-bold text-accent text-xs font-mono">
-            RA
+            {initials}
           </div>
           <div className="overflow-hidden">
             <span className="text-xs font-mono font-bold text-white block truncate">
-              raiamaral
+              {currentUser.username}
             </span>
-            <span className="text-[10px] font-mono text-wolf-400 block">
-              Admin Master
+            <span className="text-[10px] font-mono text-wolf-400 block uppercase">
+              Role: {currentUser.role}
             </span>
           </div>
         </div>
