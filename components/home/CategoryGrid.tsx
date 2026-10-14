@@ -3,11 +3,36 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 const CATEGORIES_LIST = [
-  { name: 'TÊNIS DE CORRIDA', slug: 'tenis', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800' },
-  { name: 'ROUPAS ESPORTIVAS', slug: 'roupas', image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800' },
-  { name: 'TREINO & ACADEMIA', slug: 'roupas/masculino', image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800' },
-  { name: 'ACESSÓRIOS & MOCHILAS', slug: 'acessorios', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800' },
-  { name: 'OFERTAS IMPERDÍVEIS', slug: 'ofertas', image: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=800' },
+  {
+    name: 'TÊNIS DE CORRIDA & MARATONA',
+    slug: 'maratona',
+    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80',
+    description: 'Placas de carbono e máximo amortecimento para quebrar seus recordes.',
+  },
+  {
+    name: 'TÊNIS DE TREINO & ACADEMIA',
+    slug: 'produtos?sport=academia',
+    image: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=800&auto=format&fit=crop&q=80',
+    description: 'Estabilidade superior para cross-training e musculação pesada.',
+  },
+  {
+    name: 'TÊNIS CASUAL & LIFESTYLE',
+    slug: 'produtos?sport=lifestyle',
+    image: 'https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?w=800&auto=format&fit=crop&q=80',
+    description: 'Silhuetas clássicas e design retrô-futurista para o dia a dia.',
+  },
+  {
+    name: 'TÊNIS MASCULINO DE ELITE',
+    slug: 'produtos?genero=masculino',
+    image: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800&auto=format&fit=crop&q=80',
+    description: 'Inovação e amortecimento responsivo em todos os tamanhos.',
+  },
+  {
+    name: 'TÊNIS EM OFERTA',
+    slug: 'ofertas',
+    image: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=800&auto=format&fit=crop&q=80',
+    description: 'Oportunidades exclusivas com descontos de até 30% OFF.',
+  },
 ];
 
 export function CategoryGrid() {
@@ -16,10 +41,10 @@ export function CategoryGrid() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div>
           <span className="text-xs font-mono text-accent uppercase tracking-[0.2em] font-extrabold">
-            EXPLORE POR DEPARTAMENTO
+            ESPECIALIDADES EM CALÇADOS
           </span>
           <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white font-heading mt-1">
-            CATEGORIAS EM DESTAQUE
+            CATEGORIAS DE TÊNIS
           </h2>
         </div>
 
@@ -42,13 +67,16 @@ export function CategoryGrid() {
 
               <div className="relative z-10 space-y-2">
                 <span className="text-[10px] font-mono text-accent uppercase tracking-widest block font-bold">
-                  DEPARTAMENTO
+                  CATEGORIA DE TÊNIS
                 </span>
                 <h3 className="text-2xl font-black uppercase tracking-tight text-white font-heading group-hover:text-accent transition-colors">
                   {cat.name}
                 </h3>
-                <span className="text-xs font-mono text-white underline underline-offset-4 font-bold inline-block">
-                  VER PRODUTOS →
+                <p className="text-xs text-wolf-300 font-sans max-w-md hidden sm:block">
+                  {cat.description}
+                </p>
+                <span className="text-xs font-mono text-white underline underline-offset-4 font-bold inline-block pt-1">
+                  VER MODELOS →
                 </span>
               </div>
             </Link>

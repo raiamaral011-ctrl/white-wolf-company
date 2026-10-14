@@ -1,11 +1,5 @@
-import { CategoryCatalog } from '@/components/product/CategoryCatalog';
+import { redirect } from 'next/navigation';
 
 export default function AcessoriosPage() {
-  return (
-    <CategoryCatalog
-      title="ACESSÓRIOS ESPORTIVOS"
-      subtitle="Mochilas reforçadas, bonés com proteção solar, viseiras e meias de compressão."
-      categorySlug="acessorios"
-    />
-  );
+  redirect('/produtos');
 }

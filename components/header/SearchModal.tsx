@@ -104,7 +104,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 SUGESTÕES POPULARES
               </span>
               <div className="flex flex-wrap gap-2">
-                {['Ultraboost', 'Air Max', 'Metcon 9', 'GEL-Nimbus', 'Tech Fleece', 'Shorts Corrida', 'Adidas', 'Nike'].map((term) => (
+                {['Ultraboost', 'Air Zoom', 'GEL-Nimbus', 'Adizero Boston', 'Deviate Nitro', 'Fresh Foam', 'Maratona', 'Adidas', 'Nike', 'ASICS'].map((term) => (
                   <button
                     key={term}
                     onClick={() => setQuery(term)}
@@ -117,12 +117,12 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             </div>
           ) : results.length === 0 ? (
             <div className="text-center py-8 text-wolf-400">
-              Nenhum produto encontrado para &quot;<span className="text-white font-semibold">{query}</span>&quot;.
+              Nenhum tênis encontrado para &quot;<span className="text-white font-semibold">{query}</span>&quot;.
             </div>
           ) : (
             <div className="space-y-3">
               <span className="text-xs uppercase font-mono tracking-widest text-accent block">
-                PRODUTOS ENCONTRADOS ({results.length})
+                TÊNIS ENCONTRADOS ({results.length})
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {results.map((product) => (
@@ -137,6 +137,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         src={product.images?.[0]?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400'}
                         alt={product.name}
                         fill
+                        unoptimized={product.images?.[0]?.url?.startsWith('data:')}
                         className="object-cover group-hover:scale-105 transition-transform"
                       />
                     </div>

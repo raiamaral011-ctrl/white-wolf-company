@@ -59,7 +59,13 @@ export default function CarrinhoPage() {
                 >
                   <div className="flex items-center gap-4 w-full sm:w-auto">
                     <div className="relative w-20 h-20 bg-wolf-950 rounded-sm overflow-hidden flex-shrink-0 border border-wolf-800">
-                      <Image src={item.product.images?.[0]?.url || ''} alt={item.product.name} fill className="object-cover" />
+                      <Image
+                        src={item.product.images?.[0]?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400'}
+                        alt={item.product.name}
+                        fill
+                        unoptimized={item.product.images?.[0]?.url?.startsWith('data:')}
+                        className="object-cover"
+                      />
                     </div>
                     <div>
                       <span className="text-[10px] font-mono text-accent uppercase tracking-widest block font-bold">

@@ -1,9 +1,30 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BRANDS } from '@/lib/data/products';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Tag } from 'lucide-react';
 
 export function BrandShowcase() {
+  const [brands, setBrands] = useState<any[]>(BRANDS);
+
+  useEffect(() => {
+    async function loadBrands() {
+      try {
+        const res = await fetch('/api/brands');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.brands && data.brands.length > 0) {
+            setBrands(data.brands);
+          }
+        }
+      } catch (err) {
+        // Fallback to static brands
+      }
+    }
+    loadBrands();
+  }, []);
+
   return (
     <section className="py-20 bg-wolf-950 border-b border-wolf-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
@@ -13,7 +34,7 @@ export function BrandShowcase() {
               CURADORIA OFICIAL
             </span>
             <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white font-heading mt-1">
-              MARCAS DE ELITE
+              MARCAS DE ELITE EM TÊNIS
             </h2>
           </div>
           <Link
@@ -26,9 +47,9 @@ export function BrandShowcase() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-          {BRANDS.map((brand) => (
+          {brands.map((brand) => (
             <Link
-              key={brand.id}
+              key={brand.id || brand.slug}
               href={`/marca/${brand.slug}`}
               className="group p-8 bg-wolf-900/60 border border-wolf-800 hover:border-accent hover:bg-wolf-900 transition-all rounded-sm flex flex-col justify-between items-center text-center space-y-4 hover:-translate-y-1 transform shadow-xl"
             >
@@ -37,7 +58,7 @@ export function BrandShowcase() {
                   {brand.name}
                 </span>
                 <p className="text-[11px] text-wolf-400 font-sans line-clamp-2 leading-snug">
-                  {brand.description}
+                  {brand.description || `Coleção exclusiva de calçados de corrida e treino ${brand.name}.`}
                 </p>
               </div>
 

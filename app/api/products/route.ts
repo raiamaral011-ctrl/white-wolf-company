@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Product } from '@/types';
+import { MOCK_PRODUCTS } from '@/lib/data/products';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,14 +54,23 @@ export async function GET(req: Request) {
 
     let productsList: Product[] = [];
 
-    if (!error && dbProducts) {
+    if (!error && dbProducts && dbProducts.length > 0) {
       productsList = dbProducts as Product[];
+    } else {
+      productsList = [...MOCK_PRODUCTS];
     }
 
-    // Exclude Roupas and Acessórios from public catalog
+    // Exclude Roupas, Vestuário and Acessórios from public catalog
     productsList = productsList.filter((p) => {
       const catSlug = p.category?.slug?.toLowerCase() || '';
-      return catSlug !== 'roupas' && catSlug !== 'acessorios';
+      return (
+        catSlug !== 'roupas' &&
+        catSlug !== 'acessorios' &&
+        catSlug !== 'camisetas' &&
+        catSlug !== 'shorts' &&
+        catSlug !== 'calcas' &&
+        catSlug !== 'jaquetas'
+      );
     });
 
     // Single product lookup by slug

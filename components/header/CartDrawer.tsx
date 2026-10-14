@@ -62,6 +62,7 @@ export function CartDrawer() {
                       src={item.product.images?.[0]?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400'}
                       alt={item.product.name}
                       fill
+                      unoptimized={item.product.images?.[0]?.url?.startsWith('data:')}
                       className="object-cover"
                     />
                   </div>

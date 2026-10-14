@@ -10,13 +10,15 @@ import { Product, Brand, Category } from '@/types';
 import { HomeSection } from '@/app/admin/gerenciar-home/page';
 import {
   ChevronRight, Sparkles, ShoppingBag, ArrowRight, ShieldCheck,
-  Award, Zap, Star, RefreshCw, Layers, Tag
+  Award, Zap, Star, RefreshCw, Layers, Tag, Flame
 } from 'lucide-react';
 
 export default function HomePage() {
   const [sections, setSections] = useState<HomeSection[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [maratonaProducts, setMaratonaProducts] = useState<Product[]>([]);
   const [productsMap, setProductsMap] = useState<{ [key: string]: Product[] }>({});
   const [loading, setLoading] = useState(true);
 
@@ -24,10 +26,12 @@ export default function HomePage() {
     async function loadHomeData() {
       setLoading(true);
       try {
-        // Fetch active home sections, brands, categories in parallel
-        const [secRes, metaRes] = await Promise.all([
+        // Fetch active home sections, brands, categories and products in parallel
+        const [secRes, metaRes, prodsRes, maraRes] = await Promise.all([
           fetch('/api/admin/home-sections'),
           fetch('/api/admin/meta'),
+          fetch('/api/products?featured=true'),
+          fetch('/api/products?maratona=true'),
         ]);
 
         let activeSections: HomeSection[] = [];
@@ -47,7 +51,17 @@ export default function HomePage() {
           setCategories(shoeCats);
         }
 
-        // Fetch products for any 'products' sections
+        if (prodsRes.ok) {
+          const prods = await prodsRes.json();
+          setFeaturedProducts(prods || []);
+        }
+
+        if (maraRes.ok) {
+          const mara = await maraRes.json();
+          setMaratonaProducts(mara || []);
+        }
+
+        // Fetch products for any admin-configured 'products' sections
         const prodSections = activeSections.filter((s) => s.type === 'products');
         if (prodSections.length > 0) {
           const map: { [key: string]: Product[] } = {};
@@ -82,7 +96,6 @@ export default function HomePage() {
     <div className="min-h-screen bg-wolf-950 text-white flex flex-col font-sans">
       <Header />
 
-      {/* RENDER DYNAMIC SECTIONS CONTROLLED BY ADMIN */}
       <main className="flex-1 space-y-16 pb-16">
         {loading ? (
           <div className="p-20 text-center text-wolf-400 font-mono text-xs flex flex-col items-center justify-center gap-3">
@@ -90,21 +103,21 @@ export default function HomePage() {
             <span>Carregando experiência White Wolf Company...</span>
           </div>
         ) : sections.length === 0 ? (
-          /* ELEGANT EMPTY/WELCOME HOME STATE inspirada no layout minimalista da Nike */
+          /* HOMEPAGE PADRÃO PROFISSIONAL ESPECIALIZADA EM TÊNIS */
           <div className="space-y-16">
             {/* HERO BI-COLOR BRAND BANNER */}
             <section className="relative bg-gradient-to-r from-wolf-950 via-wolf-900 to-black border-b border-wolf-800 py-24 sm:py-32 px-4 sm:px-6 lg:px-8 text-center overflow-hidden">
               <div className="max-w-4xl mx-auto space-y-6 relative z-10">
-                <span className="inline-flex items-center gap-2 text-xs font-mono font-bold text-accent uppercase tracking-widest bg-accent/10 border border-accent/30 px-3 py-1 rounded-xs">
-                  <Sparkles className="w-3.5 h-3.5" /> LOJA OFICIAL WHITE WOLF COMPANY
+                <span className="inline-flex items-center gap-2 text-xs font-mono font-bold text-accent uppercase tracking-widest bg-accent/10 border border-accent/30 px-3.5 py-1.5 rounded-xs">
+                  <Sparkles className="w-3.5 h-3.5" /> ESPECIALISTAS EM CALÇADOS DE ALTA PERFORMANCE
                 </span>
 
                 <h1 className="text-4xl sm:text-6xl font-black uppercase font-heading tracking-tight text-white leading-tight">
-                  EQUIPAMENTOS DE ELITE PARA <span className="text-accent">ALTA PERFORMANCE</span>
+                  TÊNIS DE ELITE PARA <span className="text-accent">SUPERAR LIMITES</span>
                 </h1>
 
                 <p className="text-sm sm:text-base text-wolf-300 max-w-2xl mx-auto font-sans leading-relaxed">
-                  Trabalhamos exclusivamente com as maiores marcas mundiais de artigos esportivos: Adidas, Nike, ASICS, Puma e New Balance.
+                  Curadoria oficial dos melhores calçados esportivos e de maratona do mundo: Adidas, Nike, ASICS, Puma e New Balance com amortecimento supremo e tecnologia de ponta.
                 </p>
 
                 <div className="flex flex-wrap justify-center gap-4 pt-4">
@@ -112,13 +125,13 @@ export default function HomePage() {
                     href="/produtos"
                     className="px-8 py-4 bg-accent hover:bg-rose-700 text-white font-mono text-xs font-bold uppercase tracking-widest transition-all shadow-xl shadow-rose-950/50"
                   >
-                    EXPLORAR CATÁLOGO COMPLETO →
+                    EXPLORAR TODOS OS TÊNIS →
                   </Link>
                   <Link
-                    href="/marcas"
-                    className="px-8 py-4 bg-wolf-900 hover:bg-wolf-800 border border-wolf-700 text-white font-mono text-xs font-bold uppercase tracking-widest transition-all"
+                    href="/maratona"
+                    className="px-8 py-4 bg-emerald-950 hover:bg-emerald-900 border border-emerald-700 text-emerald-300 font-mono text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2"
                   >
-                    VER MARCAS PARCEIRAS
+                    🏃 SELEÇÃO MARATONA
                   </Link>
                 </div>
               </div>
@@ -132,8 +145,8 @@ export default function HomePage() {
                     <ShieldCheck className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold uppercase font-heading text-white">PRODUTOS 100% ORIGINAIS</h3>
-                    <p className="text-xs text-wolf-400 font-mono">Garantia direta com distribuidor oficial.</p>
+                    <h3 className="text-sm font-bold uppercase font-heading text-white">CALÇADOS 100% ORIGINAIS</h3>
+                    <p className="text-xs text-wolf-400 font-mono">Garantia direta das marcas parceiras oficiais.</p>
                   </div>
                 </div>
 
@@ -142,7 +155,7 @@ export default function HomePage() {
                     <Zap className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold uppercase font-heading text-white">ENTREGA RÁPIDA DE ELITE</h3>
+                    <h3 className="text-sm font-bold uppercase font-heading text-white">ENVIO EXPRESSO SEGURO</h3>
                     <p className="text-xs text-wolf-400 font-mono">Frete grátis em compras acima de R$299.</p>
                   </div>
                 </div>
@@ -152,14 +165,61 @@ export default function HomePage() {
                     <Award className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold uppercase font-heading text-white">PARCELAMENTO FACILITADO</h3>
-                    <p className="text-xs text-wolf-400 font-mono">Até 12x sem juros no cartão ou 5% OFF PIX.</p>
+                    <h3 className="text-sm font-bold uppercase font-heading text-white">PAGAMENTO FACILITADO</h3>
+                    <p className="text-xs text-wolf-400 font-mono">Até 10x sem juros no cartão ou 5% OFF no PIX.</p>
                   </div>
                 </div>
               </div>
             </section>
 
-            {/* BRAND CATEGORIES SELECTION */}
+            {/* DESTAQUES DA SEMANA */}
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+              <div className="flex items-center justify-between border-b border-wolf-800 pb-4">
+                <div>
+                  <span className="text-xs font-mono text-accent uppercase font-bold tracking-widest flex items-center gap-1.5">
+                    <Flame className="w-3.5 h-3.5" /> EM DESTAQUE
+                  </span>
+                  <h2 className="text-2xl font-black uppercase font-heading tracking-tight text-white">
+                    LANÇAMENTOS &amp; MAIS DESEJADOS
+                  </h2>
+                </div>
+                <Link href="/produtos" className="text-xs font-mono text-accent hover:underline uppercase font-bold flex items-center gap-1">
+                  VER TODOS OS MODELOS <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+
+              <ProductGrid
+                products={featuredProducts.length > 0 ? featuredProducts.slice(0, 8) : []}
+                emptyMessage="Carregando calçados em destaque..."
+              />
+            </section>
+
+            {/* SEÇÃO MARATONA / ALTA PERFORMANCE */}
+            {maratonaProducts.length > 0 && (
+              <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+                <div className="flex items-center justify-between border-b border-emerald-900/60 pb-4">
+                  <div>
+                    <span className="text-xs font-mono text-emerald-400 uppercase font-bold tracking-widest flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      ESPECIAL MARATONA
+                    </span>
+                    <h2 className="text-2xl font-black uppercase font-heading tracking-tight text-white">
+                      TÊNIS COM PLACA DE CARBONO &amp; ALTA PERFORMANCE
+                    </h2>
+                  </div>
+                  <Link href="/maratona" className="text-xs font-mono text-emerald-400 hover:underline uppercase font-bold flex items-center gap-1">
+                    VER LINHA MARATONA COMPLETA <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+
+                <ProductGrid
+                  products={maratonaProducts.slice(0, 4)}
+                  emptyMessage="Nenhum tênis de maratona cadastrado no momento."
+                />
+              </section>
+            )}
+
+            {/* CATEGORIAS DE TÊNIS */}
             {categories.length > 0 && (
               <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
                 <div className="flex items-center justify-between border-b border-wolf-800 pb-4">
@@ -168,10 +228,10 @@ export default function HomePage() {
                       NAVEGUE POR CATEGORIA
                     </span>
                     <h2 className="text-2xl font-black uppercase font-heading tracking-tight text-white">
-                      ESPECIALIDADES ESPORTIVAS
+                      MODALIDADES &amp; FINALIDADES
                     </h2>
                   </div>
-                  <Link href="/produtos" className="text-xs font-mono text-accent hover:underline uppercase">
+                  <Link href="/produtos" className="text-xs font-mono text-accent hover:underline uppercase font-bold">
                     VER TODAS →
                   </Link>
                 </div>
@@ -193,7 +253,7 @@ export default function HomePage() {
               </section>
             )}
 
-            {/* BRANDS SECTION */}
+            {/* MARCAS PARCEIRAS */}
             {brands.length > 0 && (
               <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
                 <div className="flex items-center justify-between border-b border-wolf-800 pb-4">
@@ -202,10 +262,10 @@ export default function HomePage() {
                       PARCEIROS GLOBAIS
                     </span>
                     <h2 className="text-2xl font-black uppercase font-heading tracking-tight text-white">
-                      MARCAS DE ALTA PERFORMANCE
+                      MARCAS DE ELITE EM CALÇADOS
                     </h2>
                   </div>
-                  <Link href="/marcas" className="text-xs font-mono text-accent hover:underline uppercase">
+                  <Link href="/marcas" className="text-xs font-mono text-accent hover:underline uppercase font-bold">
                     VER TODAS AS MARCAS →
                   </Link>
                 </div>
@@ -222,7 +282,7 @@ export default function HomePage() {
                         {b.name}
                       </h3>
                       <span className="text-[10px] font-mono text-accent uppercase tracking-wider block font-bold">
-                        VER COLEÇÃO →
+                        VER TÊNIS {b.name.toUpperCase()} →
                       </span>
                     </Link>
                   ))}
@@ -365,7 +425,7 @@ export default function HomePage() {
 
                   <ProductGrid
                     products={prods}
-                    emptyMessage="Nenhum produto cadastrado nesta categoria no momento."
+                    emptyMessage="Nenhum produto cadastrado nesta vitrine no momento."
                   />
                 </section>
               );

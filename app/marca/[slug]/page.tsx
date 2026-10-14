@@ -1,6 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { BRANDS } from '@/lib/data/products';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { CategoryCatalog } from '@/components/product/CategoryCatalog';
 import { Metadata } from 'next';
 
@@ -10,8 +11,30 @@ interface BrandPageProps {
   };
 }
 
+export const dynamic = 'force-dynamic';
+
+async function getBrandData(slug: string) {
+  const normalizedSlug = slug.toLowerCase();
+
+  try {
+    const supabase = createAdminClient();
+    const { data: dbBrand } = await supabase
+      .from('brands')
+      .select('*')
+      .ilike('slug', normalizedSlug)
+      .single();
+
+    if (dbBrand) return dbBrand;
+  } catch (err) {
+    console.error('Error fetching brand from Supabase:', err);
+  }
+
+  // Fallback to static brands
+  return BRANDS.find((b) => b.slug.toLowerCase() === normalizedSlug) || null;
+}
+
 export async function generateMetadata({ params }: BrandPageProps): Promise<Metadata> {
-  const brand = BRANDS.find((b) => b.slug.toLowerCase() === params.slug.toLowerCase());
+  const brand = await getBrandData(params.slug);
   if (!brand) return { title: 'Marca Não Encontrada | WHITE WOLF COMPANY' };
 
   return {
@@ -20,8 +43,8 @@ export async function generateMetadata({ params }: BrandPageProps): Promise<Meta
   };
 }
 
-export default function BrandDetailPage({ params }: BrandPageProps) {
-  const brand = BRANDS.find((b) => b.slug.toLowerCase() === params.slug.toLowerCase());
+export default async function BrandDetailPage({ params }: BrandPageProps) {
+  const brand = await getBrandData(params.slug);
 
   if (!brand) {
     notFound();
@@ -29,8 +52,8 @@ export default function BrandDetailPage({ params }: BrandPageProps) {
 
   return (
     <CategoryCatalog
-      title={`PRODUTOS ${brand.name.toUpperCase()}`}
-      subtitle={brand.description || `Coleção oficial de produtos e calçados da marca ${brand.name}.`}
+      title={`TÊNIS ${brand.name.toUpperCase()}`}
+      subtitle={brand.description || `Coleção oficial de calçados de alta performance da marca ${brand.name}.`}
       brandSlug={brand.slug}
     />
   );

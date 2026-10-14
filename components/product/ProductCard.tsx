@@ -20,8 +20,17 @@ export function ProductCard({ product }: ProductCardProps) {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
   const favorite = isFavorite(product.id);
-  const primaryImage = product.images?.[0]?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800';
+  const fallbackImg = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800';
+  const primaryImage = product.images?.[0]?.url || fallbackImg;
   const secondaryImage = product.images?.[1]?.url || primaryImage;
+  const [imageError, setImageError] = useState(false);
+
+  const currentDisplayImage = imageError
+    ? fallbackImg
+    : isHovered
+    ? secondaryImage
+    : primaryImage;
+  const isDataUrl = currentDisplayImage.startsWith('data:');
 
   // Calculate stock across all variants
   const totalStock = product.variants && product.variants.length > 0
@@ -106,9 +115,11 @@ export function ProductCard({ product }: ProductCardProps) {
       {/* PRODUCT IMAGE HOVER ZOOM */}
       <Link href={`/produto/${product.slug}`} className="block relative aspect-square bg-wolf-900 overflow-hidden">
         <Image
-          src={isHovered ? secondaryImage : primaryImage}
+          src={currentDisplayImage}
           alt={product.name}
           fill
+          unoptimized={isDataUrl}
+          onError={() => setImageError(true)}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
             isOutOfStock ? 'grayscale-[40%]' : ''

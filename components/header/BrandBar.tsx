@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-const BRANDS_LIST = [
+const FALLBACK_BRANDS = [
   { name: 'ADIDAS', slug: 'adidas' },
   { name: 'NIKE', slug: 'nike' },
   { name: 'ASICS', slug: 'asics' },
@@ -12,6 +12,31 @@ const BRANDS_LIST = [
 ];
 
 export function BrandBar() {
+  const [brands, setBrands] = useState<{ name: string; slug: string }[]>(FALLBACK_BRANDS);
+
+  useEffect(() => {
+    async function fetchLiveBrands() {
+      try {
+        const res = await fetch('/api/brands');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.brands && data.brands.length > 0) {
+            setBrands(
+              data.brands.map((b: any) => ({
+                name: b.name.toUpperCase(),
+                slug: b.slug,
+              }))
+            );
+          }
+        }
+      } catch (err) {
+        // Keep fallback brands
+      }
+    }
+
+    fetchLiveBrands();
+  }, []);
+
   return (
     <div className="bg-wolf-950 text-white border-b border-wolf-800 py-2.5 px-4 overflow-x-auto whitespace-nowrap">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-6 text-xs font-semibold tracking-wider">
@@ -20,7 +45,7 @@ export function BrandBar() {
           MARCAS PARCEIRAS:
         </div>
         <div className="flex items-center gap-6 sm:gap-10">
-          {BRANDS_LIST.map((brand) => (
+          {brands.map((brand) => (
             <Link
               key={brand.slug}
               href={`/marca/${brand.slug}`}
