@@ -11,18 +11,18 @@ function ProdutosContent() {
   const categorySlug = searchParams.get('categoria') || searchParams.get('category') || undefined;
   const genderFilter = searchParams.get('genero') || searchParams.get('gender') || undefined;
 
-  let title = 'TODOS OS PRODUTOS';
-  let subtitle = 'Explore o catálogo completo de vestuário e calçados esportivos de alta performance.';
+  let title = 'TODOS OS TÊNIS';
+  let subtitle = 'Explore a coleção completa de tênis esportivos de elite, corrida de rua, maratona e treino.';
 
   if (brandSlug && categorySlug) {
-    title = `PRODUTOS ${brandSlug.toUpperCase()} • ${categorySlug.toUpperCase()}`;
-    subtitle = `Filtrando produtos da marca ${brandSlug.toUpperCase()} na categoria ${categorySlug.toUpperCase()}.`;
+    title = `TÊNIS ${brandSlug.toUpperCase()} • ${categorySlug.toUpperCase()}`;
+    subtitle = `Filtrando tênis da marca ${brandSlug.toUpperCase()} para ${categorySlug.toUpperCase()}.`;
   } else if (brandSlug) {
-    title = `PRODUTOS ${brandSlug.toUpperCase()}`;
-    subtitle = `Confira a coleção completa de produtos da marca ${brandSlug.toUpperCase()}.`;
+    title = `TÊNIS ${brandSlug.toUpperCase()}`;
+    subtitle = `Confira a coleção oficial de calçados esportivos ${brandSlug.toUpperCase()}.`;
   } else if (categorySlug) {
-    title = `PRODUTOS • ${categorySlug.toUpperCase()}`;
-    subtitle = `Catálogo de produtos selecionados da categoria ${categorySlug.toUpperCase()}.`;
+    title = `TÊNIS • ${categorySlug.toUpperCase()}`;
+    subtitle = `Seleção de tênis de alta performance para ${categorySlug.toUpperCase()}.`;
   }
 
   return (

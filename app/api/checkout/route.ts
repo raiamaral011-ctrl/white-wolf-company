@@ -188,7 +188,15 @@ export async function POST(request: Request) {
       .select()
       .single();
 
-    const createdOrderId = dbOrder?.id || orderId;
+    if (orderErr || !dbOrder) {
+      console.error('Error inserting order in Supabase:', orderErr);
+      return NextResponse.json(
+        { error: 'Erro ao registrar pedido no banco de dados: ' + (orderErr?.message || '') },
+        { status: 500 }
+      );
+    }
+
+    const createdOrderId = dbOrder.id;
 
     // 2. SAVE ORDER ITEMS TO SUPABASE
     const orderItemsRows = validatedOrderItems.map((item) => ({

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { MOCK_PRODUCTS, BRANDS, CATEGORIES } from '@/lib/data/products';
 import { Product } from '@/types';
@@ -176,6 +177,16 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       };
     }
 
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/produtos');
+      revalidatePath('/tenis');
+      revalidatePath('/marcas');
+      if (updatedProd.slug) {
+        revalidatePath(`/produto/${updatedProd.slug}`);
+      }
+    } catch {}
+
     return NextResponse.json({
       success: true,
       message: 'Produto atualizado com sucesso!',
@@ -209,6 +220,13 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     if (index !== -1) {
       MOCK_PRODUCTS.splice(index, 1);
     }
+
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/produtos');
+      revalidatePath('/tenis');
+      revalidatePath('/marcas');
+    } catch {}
 
     return NextResponse.json({
       success: true,

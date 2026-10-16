@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { slugify } from '@/lib/utils';
 import { BRANDS, CATEGORIES } from '@/lib/data/products';
@@ -185,6 +186,13 @@ export async function POST(req: Request) {
 
     await supabase.from('product_variants').insert(variantRows);
 
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/produtos');
+      revalidatePath('/tenis');
+      revalidatePath('/marcas');
+    } catch {}
+
     return NextResponse.json({
       success: true,
       message: 'Produto cadastrado com sucesso!',
@@ -226,6 +234,13 @@ export async function DELETE(req: Request) {
         { status: 500 }
       );
     }
+
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/produtos');
+      revalidatePath('/tenis');
+      revalidatePath('/marcas');
+    } catch {}
 
     return NextResponse.json({
       success: true,

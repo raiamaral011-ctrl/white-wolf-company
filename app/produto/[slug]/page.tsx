@@ -157,6 +157,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                 alt={product.name}
                 fill
                 priority
+                unoptimized={images[selectedImage]?.url?.startsWith('data:') || images[selectedImage]?.url?.toLowerCase().includes('.avif')}
                 className={`object-cover ${isEntirelyOutOfStock ? 'grayscale-[40%]' : ''}`}
               />
             )}

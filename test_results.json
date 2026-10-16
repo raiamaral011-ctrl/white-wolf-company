@@ -1,0 +1,57 @@
+[
+  {
+    "brand": "Nike",
+    "filter": "APROVADO (8 tênis)",
+    "image": "APROVADO (https://imgnike-a.akamaihd.net/360x...)",
+    "cart": "APROVADO (Tam: 39, Qtd: 1, Preço: R$799.99)",
+    "checkout": "APROVADO (PIX Demonstrativo)",
+    "order": "APROVADO (#3bc7aba6)",
+    "stockUpdate": "APROVADO (10 -> 9)",
+    "orderId": "3bc7aba6-2b9e-4d85-9c72-bb77e8f3d7e6",
+    "productName": "Tênis Nike Zoom Fly 6"
+  },
+  {
+    "brand": "Adidas",
+    "filter": "APROVADO (3 tênis)",
+    "image": "APROVADO (https://assets.adidas.com/images/h_...)",
+    "cart": "APROVADO (Tam: 38, Qtd: 1, Preço: R$599.99)",
+    "checkout": "APROVADO (PIX Demonstrativo)",
+    "order": "APROVADO (#39412ace)",
+    "stockUpdate": "APROVADO (10 -> 9)",
+    "orderId": "39412ace-4d0c-4c9b-b504-510272af6419",
+    "productName": "Tênis ADIDAS SUPER"
+  },
+  {
+    "brand": "ASICS",
+    "filter": "APROVADO (4 tênis)",
+    "image": "APROVADO (https://tdwqrqcyhrprzijguulo.supaba...)",
+    "cart": "APROVADO (Tam: 39, Qtd: 1, Preço: R$1499.9)",
+    "checkout": "APROVADO (PIX Demonstrativo)",
+    "order": "APROVADO (#d62d96e3)",
+    "stockUpdate": "APROVADO (10 -> 9)",
+    "orderId": "d62d96e3-e597-40d7-98c8-3da673588fcc",
+    "productName": "Superblast 3"
+  },
+  {
+    "brand": "Puma",
+    "filter": "APROVADO (5 tênis)",
+    "image": "APROVADO (https://tdwqrqcyhrprzijguulo.supaba...)",
+    "cart": "APROVADO (Tam: 39, Qtd: 1, Preço: R$699.99)",
+    "checkout": "APROVADO (PIX Demonstrativo)",
+    "order": "APROVADO (#66fc5fbb)",
+    "stockUpdate": "APROVADO (10 -> 9)",
+    "orderId": "66fc5fbb-9b11-40f6-b37c-1813050f76ec",
+    "productName": "tenis puma 180"
+  },
+  {
+    "brand": "New Balance",
+    "filter": "APROVADO (1 tênis)",
+    "image": "APROVADO (https://images.unsplash.com/photo-1...)",
+    "cart": "APROVADO (Tam: 39, Qtd: 1, Preço: R$1099.9)",
+    "checkout": "APROVADO (PIX Demonstrativo)",
+    "order": "APROVADO (#4a6caae4)",
+    "stockUpdate": "APROVADO (15 -> 14)",
+    "orderId": "4a6caae4-2e0a-4001-8d6a-d737af532d46",
+    "productName": "Tênis New Balance Fresh Foam X More v4"
+  }
+]

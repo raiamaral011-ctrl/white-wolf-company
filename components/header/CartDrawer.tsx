@@ -58,13 +58,18 @@ export function CartDrawer() {
                   className="flex gap-4 p-3 bg-wolf-900/60 border border-wolf-800 rounded-sm relative group"
                 >
                   <div className="relative w-20 h-20 bg-wolf-950 flex-shrink-0 overflow-hidden rounded-sm border border-wolf-800">
-                    <Image
-                      src={item.product.images?.[0]?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400'}
-                      alt={item.product.name}
-                      fill
-                      unoptimized={item.product.images?.[0]?.url?.startsWith('data:')}
-                      className="object-cover"
-                    />
+                    {(() => {
+                      const imgUrl = item.product.images?.find((img) => !img.url.match(/\.(mp4|webm|ogg)(\?.*)?$/i) && img.alt !== 'video')?.url || item.product.images?.[0]?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400';
+                      return (
+                        <Image
+                          src={imgUrl}
+                          alt={item.product.name}
+                          fill
+                          unoptimized={imgUrl.startsWith('data:') || imgUrl.toLowerCase().includes('.avif')}
+                          className="object-cover"
+                        />
+                      );
+                    })()}
                   </div>
 
                   <div className="flex-1 flex flex-col justify-between">

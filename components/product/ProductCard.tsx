@@ -21,8 +21,11 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const favorite = isFavorite(product.id);
   const fallbackImg = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800';
-  const primaryImage = product.images?.[0]?.url || fallbackImg;
-  const secondaryImage = product.images?.[1]?.url || primaryImage;
+  const validImages = (product.images || []).filter(
+    (img) => img.url && !img.url.match(/\.(mp4|webm|ogg)(\?.*)?$/i) && img.alt !== 'video'
+  );
+  const primaryImage = validImages[0]?.url || product.images?.[0]?.url || fallbackImg;
+  const secondaryImage = validImages[1]?.url || primaryImage;
   const [imageError, setImageError] = useState(false);
 
   const currentDisplayImage = imageError
@@ -31,6 +34,7 @@ export function ProductCard({ product }: ProductCardProps) {
     ? secondaryImage
     : primaryImage;
   const isDataUrl = currentDisplayImage.startsWith('data:');
+  const isAvif = currentDisplayImage.toLowerCase().includes('.avif');
 
   // Calculate stock across all variants
   const totalStock = product.variants && product.variants.length > 0
@@ -118,8 +122,10 @@ export function ProductCard({ product }: ProductCardProps) {
           src={currentDisplayImage}
           alt={product.name}
           fill
-          unoptimized={isDataUrl}
-          onError={() => setImageError(true)}
+          unoptimized={isDataUrl || isAvif}
+          onError={() => {
+            if (!imageError) setImageError(true);
+          }}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
             isOutOfStock ? 'grayscale-[40%]' : ''
