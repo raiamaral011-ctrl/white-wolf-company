@@ -2,12 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header/Header';
 import { Footer } from '@/components/footer/Footer';
+import { createClient } from '@/lib/supabase/browser';
 import { formatCurrency } from '@/lib/utils';
-import { Package, ArrowRight, RefreshCw, ShoppingBag } from 'lucide-react';
+import { Package, ArrowRight, ArrowLeft, RefreshCw, ShoppingBag, User, Heart } from 'lucide-react';
 
 export default function MeusPedidosPage() {
+  const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -15,6 +18,18 @@ export default function MeusPedidosPage() {
     async function loadUserOrders() {
       setLoading(true);
       try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+          // Check admin session
+          const adminRes = await fetch('/api/admin/session');
+          if (!adminRes.ok) {
+            router.push('/login?redirect=/minha-conta/pedidos');
+            return;
+          }
+        }
+
         const res = await fetch('/api/orders');
         if (res.ok) {
           const data = await res.json();
@@ -27,7 +42,7 @@ export default function MeusPedidosPage() {
       }
     }
     loadUserOrders();
-  }, []);
+  }, [router]);
 
   const getStatusBadge = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -54,13 +69,18 @@ export default function MeusPedidosPage() {
       <Header />
 
       <section className="bg-gradient-to-r from-wolf-950 via-wolf-900 to-black border-b border-wolf-800 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-2">
-          <span className="text-xs font-mono text-accent uppercase tracking-widest font-bold">
-            HISTÓRICO DE COMPRAS
-          </span>
-          <h1 className="text-3xl font-black uppercase font-heading tracking-tight flex items-center gap-3">
-            <Package className="w-8 h-8 text-accent" /> MEUS PEDIDOS ({loading ? '...' : orders.length})
-          </h1>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+          <Link href="/minha-conta" className="text-xs font-mono text-accent hover:underline flex items-center gap-1.5">
+            <ArrowLeft className="w-4 h-4" /> VOLTAR PARA MINHA CONTA
+          </Link>
+          <div className="space-y-1">
+            <span className="text-xs font-mono text-accent uppercase tracking-widest font-bold">
+              HISTÓRICO DE COMPRAS
+            </span>
+            <h1 className="text-3xl font-black uppercase font-heading tracking-tight flex items-center gap-3">
+              <Package className="w-8 h-8 text-accent" /> MEUS PEDIDOS ({loading ? '...' : orders.length})
+            </h1>
+          </div>
         </div>
       </section>
 
@@ -75,10 +95,10 @@ export default function MeusPedidosPage() {
             <ShoppingBag className="w-12 h-12 text-wolf-600 mx-auto" />
             <p className="text-sm text-wolf-300">Você ainda não possui pedidos registrados.</p>
             <Link
-              href="/tenis"
+              href="/produtos"
               className="inline-flex items-center gap-2 px-6 py-3 bg-accent hover:bg-rose-700 text-white text-xs uppercase font-bold tracking-wider rounded-xs transition-colors"
             >
-              EXPLORAR PRODUTOS <ArrowRight className="w-4 h-4" />
+              EXPLORAR TÊNIS <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         ) : (
@@ -115,7 +135,7 @@ export default function MeusPedidosPage() {
                 <div className="pt-4 border-t border-wolf-800 flex justify-end">
                   <Link
                     href={`/minha-conta/pedidos/${order.id}`}
-                    className="px-4 py-2 bg-wolf-950 border border-wolf-700 hover:border-accent text-white font-mono text-xs uppercase font-bold flex items-center gap-1 transition-colors"
+                    className="px-4 py-2 bg-wolf-950 border border-wolf-700 hover:border-accent text-white font-mono text-xs uppercase font-bold flex items-center gap-1.5 transition-colors"
                   >
                     VER DETALHES DO PEDIDO <ArrowRight className="w-3.5 h-3.5" />
                   </Link>

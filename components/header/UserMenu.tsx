@@ -1,9 +1,9 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { User, LogIn, UserPlus, Shield, Package, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { User, LogIn, UserPlus, Shield, Package, Settings, LogOut, ChevronDown, CheckCircle2, AlertCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/browser';
 
 export function UserMenu() {
@@ -11,14 +11,18 @@ export function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<{ email?: string; name?: string; role?: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let isMounted = true;
     const supabase = createClient();
 
     async function getUserProfile() {
       try {
+        // 1. Check Supabase Auth session first
         const { data: { session } } = await supabase.auth.getSession();
+        
         if (session?.user) {
           const { data: profile } = await supabase
             .from('profiles')
@@ -26,40 +30,48 @@ export function UserMenu() {
             .eq('user_id', session.user.id)
             .single();
 
-          setUser({
-            email: session.user.email,
-            name: profile?.full_name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
-            role: profile?.role || session.user.user_metadata?.role || 'customer',
-          });
-        } else {
-          // Check if admin session cookie exists
-          const res = await fetch('/api/admin/session');
-          if (res.ok) {
-            const data = await res.json();
-            if (data.authenticated && data.user) {
-              setUser({
-                email: data.user.email,
-                name: data.user.username,
-                role: 'admin',
-              });
-            } else {
-              setUser(null);
-            }
-          } else {
-            setUser(null);
+          if (isMounted) {
+            setUser({
+              email: session.user.email,
+              name: profile?.full_name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
+              role: profile?.role || session.user.user_metadata?.role || 'customer',
+            });
+          }
+          return;
+        }
+
+        // 2. Check if admin session cookie exists
+        const res = await fetch('/api/admin/session');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated && data.user && isMounted) {
+            setUser({
+              email: data.user.email,
+              name: data.user.username,
+              role: 'admin',
+            });
+            return;
           }
         }
+
+        if (isMounted) {
+          setUser(null);
+        }
       } catch (err) {
-        setUser(null);
+        if (isMounted) setUser(null);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
 
     getUserProfile();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      getUserProfile();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        if (isMounted) setUser(null);
+      } else {
+        getUserProfile();
+      }
     });
 
     // Close menu when clicking outside
@@ -71,6 +83,7 @@ export function UserMenu() {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -79,15 +92,30 @@ export function UserMenu() {
   const handleLogout = async () => {
     try {
       const supabase = createClient();
+      
+      // 1. Client-side Supabase Auth signout
       await supabase.auth.signOut();
-      // Also clear admin token
-      document.cookie = 'ww_admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+
+      // 2. Clear admin and server auth session cookies
+      await Promise.all([
+        fetch('/api/auth/logout', { method: 'POST' }),
+        fetch('/api/admin/logout', { method: 'POST' }),
+      ]);
+
+      // 3. Immediately reset local state
       setUser(null);
-      setIsOpen(false);
-      router.push('/');
-      router.refresh();
-    } catch (err) {
+      setStatusMsg({ type: 'success', text: 'Sessão encerrada com sucesso!' });
+
+      setTimeout(() => {
+        setIsOpen(false);
+        setStatusMsg(null);
+        // Hard reload to clean all client router caches and server component state
+        window.location.href = '/';
+      }, 500);
+
+    } catch (err: any) {
       console.error('Logout error:', err);
+      setStatusMsg({ type: 'error', text: 'Erro ao encerrar sessão.' });
     }
   };
 
@@ -106,15 +134,31 @@ export function UserMenu() {
       >
         <User className="w-5 h-5" />
         {user && (
-          <span className="hidden md:inline-block text-[11px] font-mono font-bold max-w-[90px] truncate text-white">
-            {user.name}
-          </span>
+          <div className="hidden md:flex items-center gap-1.5">
+            <span className="text-[11px] font-mono font-bold max-w-[90px] truncate text-white">
+              {user.name}
+            </span>
+            {isAdmin && (
+              <span className="bg-accent/20 border border-accent/40 text-accent text-[9px] px-1 py-0.5 rounded-xs font-mono font-black uppercase">
+                ADMIN
+              </span>
+            )}
+          </div>
         )}
         <ChevronDown className={`w-3.5 h-3.5 text-wolf-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-64 bg-wolf-950 border border-wolf-800 shadow-2xl rounded-sm py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 font-mono">
+          {statusMsg && (
+            <div className={`px-4 py-2 mx-2 mb-2 text-xs rounded-xs flex items-center gap-2 ${
+              statusMsg.type === 'success' ? 'bg-emerald-950 border border-emerald-800 text-emerald-300' : 'bg-rose-950 border border-rose-800 text-rose-300'
+            }`}>
+              {statusMsg.type === 'success' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
+              <span>{statusMsg.text}</span>
+            </div>
+          )}
+
           {user ? (
             <>
               {/* User Header */}
@@ -125,7 +169,7 @@ export function UserMenu() {
                   </span>
                   {isAdmin && (
                     <span className="bg-accent/20 text-accent text-[9px] px-1.5 py-0.5 rounded-xs font-bold uppercase tracking-wider">
-                      Admin
+                      ADMIN
                     </span>
                   )}
                 </div>

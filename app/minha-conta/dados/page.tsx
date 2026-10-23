@@ -1,11 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header/Header';
 import { Footer } from '@/components/footer/Footer';
-import { User, Check, RefreshCw, AlertCircle } from 'lucide-react';
+import { User, Check, RefreshCw, AlertCircle, ArrowLeft } from 'lucide-react';
 
 export default function MeusDadosPage() {
+  const router = useRouter();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [cpf, setCpf] = useState('');
@@ -20,6 +23,10 @@ export default function MeusDadosPage() {
       setLoading(true);
       try {
         const res = await fetch('/api/profile');
+        if (res.status === 401) {
+          router.push('/login?redirect=/minha-conta/dados');
+          return;
+        }
         if (res.ok) {
           const data = await res.json();
           if (data.profile) {
@@ -36,7 +43,7 @@ export default function MeusDadosPage() {
       }
     }
     loadProfile();
-  }, []);
+  }, [router]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,13 +79,18 @@ export default function MeusDadosPage() {
       <Header />
 
       <section className="bg-gradient-to-r from-wolf-950 via-wolf-900 to-black border-b border-wolf-800 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-2">
-          <span className="text-xs font-mono text-accent uppercase tracking-widest font-bold">
-            CADASTRO PESSOAL
-          </span>
-          <h1 className="text-3xl font-black uppercase font-heading tracking-tight flex items-center gap-3">
-            <User className="w-8 h-8 text-accent" /> MEUS DADOS PESSOAIS
-          </h1>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+          <Link href="/minha-conta" className="text-xs font-mono text-accent hover:underline flex items-center gap-1.5">
+            <ArrowLeft className="w-4 h-4" /> VOLTAR PARA MINHA CONTA
+          </Link>
+          <div className="space-y-1">
+            <span className="text-xs font-mono text-accent uppercase tracking-widest font-bold">
+              CADASTRO PESSOAL
+            </span>
+            <h1 className="text-3xl font-black uppercase font-heading tracking-tight flex items-center gap-3">
+              <User className="w-8 h-8 text-accent" /> MEUS DADOS PESSOAIS
+            </h1>
+          </div>
         </div>
       </section>
 

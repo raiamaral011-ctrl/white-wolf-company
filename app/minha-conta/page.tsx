@@ -6,12 +6,12 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header/Header';
 import { Footer } from '@/components/footer/Footer';
 import { createClient } from '@/lib/supabase/browser';
-import { ShoppingBag, Heart, MapPin, User, LogOut, Package, RefreshCw, AlertCircle, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Heart, MapPin, User, LogOut, Package, RefreshCw, AlertCircle, ArrowRight, Shield } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 export default function MinhaContaDashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<{ id: string; email?: string; name: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; email?: string; name: string; role?: string } | null>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,23 +22,41 @@ export default function MinhaContaDashboardPage() {
         const supabase = createClient();
         const { data: { user: authUser } } = await supabase.auth.getUser();
 
-        if (!authUser) {
-          router.push('/login');
-          return;
+        if (authUser) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, role')
+            .eq('user_id', authUser.id)
+            .single();
+
+          const resolvedName = profile?.full_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'Atleta';
+          setUser({
+            id: authUser.id,
+            email: authUser.email,
+            name: resolvedName,
+            role: profile?.role || 'customer',
+          });
+        } else {
+          // Check if admin is logged in via admin session
+          const adminRes = await fetch('/api/admin/session');
+          if (adminRes.ok) {
+            const adminData = await adminRes.json();
+            if (adminData.authenticated && adminData.user) {
+              setUser({
+                id: adminData.user.id,
+                email: adminData.user.email,
+                name: adminData.user.username,
+                role: 'admin',
+              });
+            } else {
+              router.push('/login?redirect=/minha-conta');
+              return;
+            }
+          } else {
+            router.push('/login?redirect=/minha-conta');
+            return;
+          }
         }
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('user_id', authUser.id)
-          .single();
-
-        const resolvedName = profile?.full_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'Atleta';
-        setUser({
-          id: authUser.id,
-          email: authUser.email,
-          name: resolvedName,
-        });
 
         // Load real orders for this user
         const res = await fetch('/api/orders');
@@ -57,11 +75,18 @@ export default function MinhaContaDashboardPage() {
   }, [router]);
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    document.cookie = 'ww_admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    router.push('/');
-    router.refresh();
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      await Promise.all([
+        fetch('/api/auth/logout', { method: 'POST' }),
+        fetch('/api/admin/logout', { method: 'POST' }),
+      ]);
+      window.location.href = '/';
+    } catch (err) {
+      console.error('Logout error:', err);
+      window.location.href = '/';
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -97,15 +122,24 @@ export default function MinhaContaDashboardPage() {
     );
   }
 
+  const isAdmin = user?.role === 'admin' || user?.role === 'master_admin';
+
   return (
     <div className="min-h-screen bg-wolf-950 text-white flex flex-col font-sans">
       <Header />
 
       <section className="bg-gradient-to-r from-wolf-950 via-wolf-900 to-black border-b border-wolf-800 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-2">
-          <span className="text-xs font-mono text-accent uppercase tracking-widest font-bold">
-            PAINEL DO ATLETA
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-accent uppercase tracking-widest font-bold">
+              PAINEL DO ATLETA
+            </span>
+            {isAdmin && (
+              <span className="bg-accent/20 border border-accent/40 text-accent text-[9px] px-1.5 py-0.5 rounded-xs font-mono font-bold uppercase">
+                ADMIN
+              </span>
+            )}
+          </div>
           <h1 className="text-3xl font-black uppercase font-heading tracking-tight">
             OLÁ, {user?.name?.toUpperCase() || 'CLIENTE'}
           </h1>
@@ -118,6 +152,11 @@ export default function MinhaContaDashboardPage() {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* ACCOUNT NAVIGATION MENU (4 Cols) */}
         <aside className="lg:col-span-4 bg-wolf-900 border border-wolf-800 p-6 rounded-sm space-y-2">
+          {isAdmin && (
+            <Link href="/admin" className="flex items-center gap-3 p-3 bg-wolf-950 border border-accent text-accent font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-wolf-800 transition-colors">
+              <Shield className="w-4 h-4 text-accent" /> PAINEL ADMINISTRATIVO
+            </Link>
+          )}
           <Link href="/minha-conta" className="flex items-center gap-3 p-3 bg-accent text-white font-bold text-xs uppercase tracking-wider rounded-xs">
             <User className="w-4 h-4" /> MINHA CONTA
           </Link>
@@ -132,7 +171,7 @@ export default function MinhaContaDashboardPage() {
           </Link>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 p-3 text-rose-400 hover:bg-rose-950/40 font-mono text-xs uppercase rounded-xs transition-colors pt-4 border-t border-wolf-800 cursor-pointer"
+            className="w-full flex items-center gap-3 p-3 text-rose-400 hover:bg-rose-950/40 font-mono text-xs uppercase rounded-xs transition-colors pt-4 border-t border-wolf-800 cursor-pointer text-left"
           >
             <LogOut className="w-4 h-4" /> SAIR DA CONTA
           </button>

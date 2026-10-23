@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -9,7 +10,25 @@ export async function GET() {
     const supabaseServer = createClient();
     const { data: { user } } = await supabaseServer.auth.getUser();
 
-    if (!user) {
+    let targetUserId = user?.id;
+    let targetEmail = user?.email;
+
+    if (!targetUserId) {
+      // Check admin session cookie
+      const cookieStore = cookies();
+      const adminToken = cookieStore.get('ww_admin_token');
+      if (adminToken?.value) {
+        try {
+          const payload = JSON.parse(Buffer.from(adminToken.value, 'base64').toString('utf-8'));
+          if (payload?.userId) {
+            targetUserId = payload.userId;
+            targetEmail = payload.email;
+          }
+        } catch {}
+      }
+    }
+
+    if (!targetUserId) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
@@ -17,7 +36,7 @@ export async function GET() {
     let { data: profile } = await supabase
       .from('profiles')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', targetUserId)
       .single();
 
     if (!profile) {
@@ -25,9 +44,9 @@ export async function GET() {
       const { data: newProfile } = await supabase
         .from('profiles')
         .insert({
-          user_id: user.id,
-          full_name: user.user_metadata?.full_name || 'Cliente',
-          email: user.email || '',
+          user_id: targetUserId,
+          full_name: user?.user_metadata?.full_name || 'Atleta',
+          email: targetEmail || '',
           role: 'customer',
         })
         .select()
@@ -46,7 +65,22 @@ export async function PUT(req: Request) {
     const supabaseServer = createClient();
     const { data: { user } } = await supabaseServer.auth.getUser();
 
-    if (!user) {
+    let targetUserId = user?.id;
+
+    if (!targetUserId) {
+      const cookieStore = cookies();
+      const adminToken = cookieStore.get('ww_admin_token');
+      if (adminToken?.value) {
+        try {
+          const payload = JSON.parse(Buffer.from(adminToken.value, 'base64').toString('utf-8'));
+          if (payload?.userId) {
+            targetUserId = payload.userId;
+          }
+        } catch {}
+      }
+    }
+
+    if (!targetUserId) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
@@ -62,7 +96,7 @@ export async function PUT(req: Request) {
         phone: phone?.trim() || null,
         updated_at: new Date().toISOString(),
       })
-      .eq('user_id', user.id)
+      .eq('user_id', targetUserId)
       .select()
       .single();
 
