@@ -43,3 +43,14 @@ export function slugify(text: string): string {
     .replace(/[^\w\-]+/g, "")
     .replace(/\-\-+/g, "-");
 }
+
+export function normalizeText(text: string | null | undefined): string {
+  if (!text) return "";
+  return text
+    .toString()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+

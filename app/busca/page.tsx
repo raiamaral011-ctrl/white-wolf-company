@@ -7,6 +7,7 @@ import { Footer } from '@/components/footer/Footer';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { MOCK_PRODUCTS } from '@/lib/data/products';
 import { Product } from '@/types';
+import { normalizeText } from '@/lib/utils';
 import { Search, RefreshCw } from 'lucide-react';
 
 function BuscaContent() {
@@ -27,7 +28,8 @@ function BuscaContent() {
         const res = await fetch(`/api/products?q=${encodeURIComponent(q)}`);
         if (res.ok) {
           const data: Product[] = await res.json();
-          setResults(data);
+          // Guarantee masculine products only
+          setResults((data || []).filter((p: Product) => p.gender?.toLowerCase() === 'masculino'));
         } else {
           fallbackLocal(q);
         }
@@ -39,14 +41,15 @@ function BuscaContent() {
     };
 
     const fallbackLocal = (termStr: string) => {
-      const term = termStr.toLowerCase();
+      const normTerm = normalizeText(termStr);
       const filtered = MOCK_PRODUCTS.filter(
         (p) =>
-          p.name.toLowerCase().includes(term) ||
-          p.brand?.name.toLowerCase().includes(term) ||
-          p.category?.name.toLowerCase().includes(term) ||
-          p.sku.toLowerCase().includes(term) ||
-          p.description.toLowerCase().includes(term)
+          p.gender?.toLowerCase() === 'masculino' &&
+          (normalizeText(p.name).includes(normTerm) ||
+           normalizeText(p.brand?.name).includes(normTerm) ||
+           normalizeText(p.category?.name).includes(normTerm) ||
+           normalizeText(p.sku).includes(normTerm) ||
+           normalizeText(p.description).includes(normTerm))
       );
       setResults(filtered);
     };

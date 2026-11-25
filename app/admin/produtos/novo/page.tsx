@@ -45,7 +45,7 @@ export default function AdminNovoProdutoPage() {
     sku: '',
     price: '',
     compare_at_price: '',
-    gender: 'unisex',
+    gender: 'masculino',
     sport: 'running',
     featured: false,
     is_new: true,
@@ -62,10 +62,14 @@ export default function AdminNovoProdutoPage() {
   const [urlType, setUrlType] = useState<'image' | 'video'>('image');
 
   const [variants, setVariants] = useState<VariantInput[]>([
+    { size: '38', stock: 10, color: '#0f172a', color_name: 'Padrão' },
     { size: '39', stock: 10, color: '#0f172a', color_name: 'Padrão' },
     { size: '40', stock: 10, color: '#0f172a', color_name: 'Padrão' },
     { size: '41', stock: 10, color: '#0f172a', color_name: 'Padrão' },
     { size: '42', stock: 10, color: '#0f172a', color_name: 'Padrão' },
+    { size: '43', stock: 10, color: '#0f172a', color_name: 'Padrão' },
+    { size: '44', stock: 10, color: '#0f172a', color_name: 'Padrão' },
+    { size: '45', stock: 10, color: '#0f172a', color_name: 'Padrão' },
   ]);
 
   const [saving, setSaving] = useState(false);
@@ -680,6 +684,43 @@ export default function AdminNovoProdutoPage() {
                          media.url ? '✓ Pronto' :
                          media.source === 'url' ? '✓ URL definida' :
                          '○ Aguardando envio'}
+                      </div>
+
+                      {/* Reorder controls */}
+                      <div className="flex items-center justify-between p-1.5 bg-wolf-950 border-t border-wolf-800 text-[10px] font-mono">
+                        <button
+                          type="button"
+                          disabled={index === 0}
+                          onClick={() => {
+                            if (index === 0) return;
+                            const updated = [...mediaFiles];
+                            const temp = updated[index];
+                            updated[index] = updated[index - 1];
+                            updated[index - 1] = temp;
+                            setMediaFiles(updated);
+                          }}
+                          className="px-2 py-0.5 bg-wolf-900 hover:bg-wolf-800 disabled:opacity-30 text-white rounded-xs"
+                          title="Mover para antes"
+                        >
+                          ← Mover
+                        </button>
+                        <span className="text-wolf-500 font-bold">{index + 1} de {mediaFiles.length}</span>
+                        <button
+                          type="button"
+                          disabled={index === mediaFiles.length - 1}
+                          onClick={() => {
+                            if (index === mediaFiles.length - 1) return;
+                            const updated = [...mediaFiles];
+                            const temp = updated[index];
+                            updated[index] = updated[index + 1];
+                            updated[index + 1] = temp;
+                            setMediaFiles(updated);
+                          }}
+                          className="px-2 py-0.5 bg-wolf-900 hover:bg-wolf-800 disabled:opacity-30 text-white rounded-xs"
+                          title="Mover para depois"
+                        >
+                          Mover →
+                        </button>
                       </div>
                     </div>
                   ))}

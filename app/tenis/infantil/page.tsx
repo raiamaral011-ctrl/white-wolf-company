@@ -1,12 +1,5 @@
-import { CategoryCatalog } from '@/components/product/CategoryCatalog';
+import { redirect } from 'next/navigation';
 
 export default function TenisInfantilPage() {
-  return (
-    <CategoryCatalog
-      title="TÊNIS INFANTIS"
-      subtitle="Conforto e resistência para os futuros atletas."
-      categorySlug="tenis"
-      genderFilter="infantil"
-    />
-  );
+  redirect('/produtos');
 }

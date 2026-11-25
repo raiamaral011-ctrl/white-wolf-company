@@ -39,13 +39,16 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         const res = await fetch(`/api/products?slug=${params.slug}`);
         if (res.ok) {
           const data = await res.json();
-          if (data) {
+          if (data && data.gender?.toLowerCase() === 'masculino') {
             setProduct(data);
             if (data.variants && data.variants.length > 0) {
-              const firstInStock = data.variants.find((v: ProductVariant) => (v.stock || 0) > 0);
-              setSelectedSize(firstInStock ? firstInStock.size : data.variants[0].size);
-              setSelectedColor(data.variants[0].color_name || 'Padrão');
+              const sortedVariants = [...data.variants].sort((a: ProductVariant, b: ProductVariant) => Number(a.size) - Number(b.size));
+              const firstInStock = sortedVariants.find((v: ProductVariant) => (v.stock || 0) > 0);
+              setSelectedSize(firstInStock ? firstInStock.size : sortedVariants[0].size);
+              setSelectedColor(sortedVariants[0].color_name || 'Padrão');
             }
+          } else {
+            setProduct(null);
           }
         }
       } catch (err) {
@@ -284,7 +287,16 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
             </div>
 
             <div className="grid grid-cols-4 gap-2">
-              {(product.variants || [{ size: '38', stock: 10 }, { size: '39', stock: 10 }, { size: '40', stock: 10 }, { size: '41', stock: 10 }, { size: '42', stock: 10 }, { size: '43', stock: 10 }, { size: '44', stock: 10 }]).map((v) => {
+              {((product.variants && product.variants.length > 0 ? [...product.variants].sort((a, b) => Number(a.size) - Number(b.size)) : null) || [
+                { size: '38', stock: 10 },
+                { size: '39', stock: 10 },
+                { size: '40', stock: 10 },
+                { size: '41', stock: 10 },
+                { size: '42', stock: 10 },
+                { size: '43', stock: 10 },
+                { size: '44', stock: 10 },
+                { size: '45', stock: 10 },
+              ]).map((v) => {
                 const varOutOfStock = (v.stock ?? 10) <= 0;
                 return (
                   <button

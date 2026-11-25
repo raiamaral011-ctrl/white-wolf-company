@@ -1,0 +1,116 @@
+[
+  {
+    "num": 1,
+    "desc": "Confirmar que somente tênis masculinos aparecem",
+    "passed": true,
+    "details": "44 tênis masculinos encontrados"
+  },
+  {
+    "num": 2,
+    "desc": "Confirmar que roupas e acessórios não aparecem",
+    "passed": true,
+    "details": "Nenhum vestuário/acessório na loja pública"
+  },
+  {
+    "num": 3,
+    "desc": "Confirmar que produtos femininos e infantis não aparecem",
+    "passed": true,
+    "details": "0 femininos e 0 infantis na loja pública"
+  },
+  {
+    "num": 4,
+    "desc": "Confirmar que não existe filtro de Categoria na interface",
+    "passed": true,
+    "details": "Filtro de Categoria totalmente removido da interface"
+  },
+  {
+    "num": 5,
+    "desc": "Confirmar que não existe filtro de Gênero na interface",
+    "passed": true,
+    "details": "Filtro de Gênero totalmente removido da interface"
+  },
+  {
+    "num": 6,
+    "desc": "Confirmar filtros de Marca, Tamanho, Preço e Disponibilidade",
+    "passed": true,
+    "details": "Todos os 4 filtros ativos e funcionais"
+  },
+  {
+    "num": 7,
+    "desc": "Confirmar que filtros podem ser combinados (Marca + Tamanho + Preço + Estoque)",
+    "passed": true,
+    "details": "26 produtos retornados com 4 filtros combinados simultaneamente"
+  },
+  {
+    "num": 8,
+    "desc": "Testar produto com uma imagem",
+    "passed": true,
+    "details": "Produto 'Nike Revolution 8' verificado"
+  },
+  {
+    "num": 9,
+    "desc": "Testar produto com várias imagens",
+    "passed": true,
+    "details": "Produto 'Air Max 90 Preto' possui 4 imagens no banco"
+  },
+  {
+    "num": 10,
+    "desc": "Testar carrossel individual em cada card de produto",
+    "passed": true,
+    "details": "Setas de navegação circular e controle de índice isolado por card"
+  },
+  {
+    "num": 11,
+    "desc": "Testar galeria na página de detalhes com miniaturas e imagem principal",
+    "passed": true,
+    "details": "Galeria interativa com suporte a seleção de miniaturas e ampliação"
+  },
+  {
+    "num": 12,
+    "desc": "Testar upload e exibição de formato AVIF",
+    "passed": true,
+    "details": "MIME image/avif configurado no Next.js e no input de mídia administrativo"
+  },
+  {
+    "num": 13,
+    "desc": "Testar integridade de palavras com acentuação (UTF-8)",
+    "passed": true,
+    "details": "Tênis, Maratona, Descrição, Numeração, Promoção, Masculino, Avaliação, Informações, Coleção, Edição validados em UTF-8"
+  },
+  {
+    "num": 14,
+    "desc": "Testar pesquisa normalizada sem acentos",
+    "passed": true,
+    "details": "'tenis' == 'Tênis' (true), 'promocao' == 'Promoção' (true)"
+  },
+  {
+    "num": 15,
+    "desc": "Confirmar exibição de numeração até 45 (42, 43, 44, 45)",
+    "passed": true,
+    "details": "Tamanhos 42, 43, 44 e 45 presentes no banco e renderizados no card"
+  },
+  {
+    "num": 16,
+    "desc": "Confirmar bloqueio de tamanhos sem estoque (disabled / line-through)",
+    "passed": true,
+    "details": "Variantes com estoque <= 0 desabilitadas para seleção"
+  },
+  {
+    "num": 17,
+    "desc": "Testar adição ao carrinho com tamanho válido (Tam 42)",
+    "passed": true,
+    "details": "Produto 'Air Max 90 Preto' possui estoque no tamanho 42"
+  },
+  {
+    "num": 18,
+    "desc": "Confirmar persistência de dados no banco após reload",
+    "passed": true,
+    "details": "Produto 'Air Max 90 Preto' persistido com gender='masculino'"
+  },
+  {
+    "num": 19,
+    "desc": "Testar aplicação automática de regras para novos produtos cadastrados",
+    "passed": true,
+    "details": "Novos produtos masculinos são publicados; femininos/infantis são automaticamente bloqueados"
+  }
+]

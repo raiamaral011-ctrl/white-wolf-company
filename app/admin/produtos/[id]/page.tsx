@@ -710,6 +710,43 @@ export default function AdminEditProdutoPage({ params }: { params: { id: string 
                          media.source === 'url' ? '✓ Existente/URL' :
                          '○ Aguardando envio'}
                       </div>
+
+                      {/* Reorder controls */}
+                      <div className="flex items-center justify-between p-1.5 bg-wolf-950 border-t border-wolf-800 text-[10px] font-mono">
+                        <button
+                          type="button"
+                          disabled={index === 0}
+                          onClick={() => {
+                            if (index === 0) return;
+                            const updated = [...mediaFiles];
+                            const temp = updated[index];
+                            updated[index] = updated[index - 1];
+                            updated[index - 1] = temp;
+                            setMediaFiles(updated);
+                          }}
+                          className="px-2 py-0.5 bg-wolf-900 hover:bg-wolf-800 disabled:opacity-30 text-white rounded-xs"
+                          title="Mover para antes"
+                        >
+                          ← Mover
+                        </button>
+                        <span className="text-wolf-500 font-bold">{index + 1} de {mediaFiles.length}</span>
+                        <button
+                          type="button"
+                          disabled={index === mediaFiles.length - 1}
+                          onClick={() => {
+                            if (index === mediaFiles.length - 1) return;
+                            const updated = [...mediaFiles];
+                            const temp = updated[index];
+                            updated[index] = updated[index + 1];
+                            updated[index + 1] = temp;
+                            setMediaFiles(updated);
+                          }}
+                          className="px-2 py-0.5 bg-wolf-900 hover:bg-wolf-800 disabled:opacity-30 text-white rounded-xs"
+                          title="Mover para depois"
+                        >
+                          Mover →
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

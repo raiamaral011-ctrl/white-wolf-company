@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Search, X, ArrowRight } from 'lucide-react';
 import { MOCK_PRODUCTS } from '@/lib/data/products';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, normalizeText } from '@/lib/utils';
 import { Product } from '@/types';
 
 interface SearchModalProps {
@@ -32,7 +32,8 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         const res = await fetch(`/api/products?q=${encodeURIComponent(query)}`);
         if (res.ok) {
           const data: Product[] = await res.json();
-          setResults(data.slice(0, 6));
+          const masculineOnly = (data || []).filter((p: Product) => p.gender?.toLowerCase() === 'masculino');
+          setResults(masculineOnly.slice(0, 6));
         } else {
           fallbackSearch();
         }
@@ -44,13 +45,14 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     }, 250);
 
     const fallbackSearch = () => {
-      const q = query.toLowerCase();
+      const normQ = normalizeText(query);
       const filtered = MOCK_PRODUCTS.filter(
         (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.brand?.name.toLowerCase().includes(q) ||
-          p.category?.name.toLowerCase().includes(q) ||
-          p.sku.toLowerCase().includes(q)
+          p.gender?.toLowerCase() === 'masculino' &&
+          (normalizeText(p.name).includes(normQ) ||
+           normalizeText(p.brand?.name).includes(normQ) ||
+           normalizeText(p.category?.name).includes(normQ) ||
+           normalizeText(p.sku).includes(normQ))
       ).slice(0, 6);
       setResults(filtered);
     };

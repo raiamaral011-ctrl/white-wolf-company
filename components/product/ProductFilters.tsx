@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { BRANDS as FALLBACK_BRANDS } from '@/lib/data/products';
-import { FilterOptions, Brand, Category } from '@/types';
-import { SlidersHorizontal, RotateCcw, Flame, Check } from 'lucide-react';
+import { FilterOptions, Brand } from '@/types';
+import { SlidersHorizontal, RotateCcw, Check, CheckCircle2, Box } from 'lucide-react';
 
 interface ProductFiltersProps {
   filters: FilterOptions;
@@ -11,7 +11,8 @@ interface ProductFiltersProps {
   onReset: () => void;
 }
 
-const AVAILABLE_SIZES = ['37', '38', '39', '40', '41', '42', '43', '44', '45'];
+// Full masculine shoe sizes from 38 to 45
+const MALE_SIZES = ['38', '39', '40', '41', '42', '43', '44', '45'];
 
 const PRICE_RANGES = [
   { label: 'Até R$ 300', min: undefined, max: 300 },
@@ -22,7 +23,6 @@ const PRICE_RANGES = [
 
 export function ProductFilters({ filters, onFilterChange, onReset }: ProductFiltersProps) {
   const [brands, setBrands] = useState<Brand[]>(FALLBACK_BRANDS as Brand[]);
-  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     async function loadMeta() {
@@ -31,17 +31,9 @@ export function ProductFilters({ filters, onFilterChange, onReset }: ProductFilt
         if (res.ok) {
           const data = await res.json();
           if (data.brands && data.brands.length > 0) setBrands(data.brands);
-          if (data.categories && data.categories.length > 0) {
-            // Exclude vestuário and acessórios
-            const shoeCategories = data.categories.filter((c: Category) => {
-              const slug = c.slug?.toLowerCase() || '';
-              return slug !== 'roupas' && slug !== 'acessorios' && slug !== 'camisetas';
-            });
-            setCategories(shoeCategories);
-          }
         }
       } catch (err) {
-        console.error('Error fetching live filter meta:', err);
+        console.error('Error fetching live brands meta:', err);
       }
     }
     loadMeta();
@@ -84,7 +76,25 @@ export function ProductFilters({ filters, onFilterChange, onReset }: ProductFilt
         </button>
       </div>
 
-      {/* 1. SELEÇÃO MARATONA (DESTAQUE PERFORMANCE) */}
+      {/* 1. DISPONIBILIDADE EM ESTOQUE (OBRIGATÓRIO PROMPT 2) */}
+      <div className="p-3 bg-wolf-900/60 border border-wolf-800 rounded-xs space-y-2">
+        <label className="flex items-center gap-2.5 text-xs text-white font-bold font-mono cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={!!filters.inStockOnly}
+            onChange={(e) => onFilterChange({ ...filters, inStockOnly: e.target.checked })}
+            className="accent-rose-600 w-4 h-4 rounded cursor-pointer"
+          />
+          <span className="flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> SOMENTE EM ESTOQUE
+          </span>
+        </label>
+        <p className="text-[10px] text-wolf-400 font-mono leading-tight pl-6">
+          Ocultar modelos totalmente esgotados.
+        </p>
+      </div>
+
+      {/* 2. SELEÇÃO MARATONA (ALTA PERFORMANCE) */}
       <div className="p-3 bg-emerald-950/40 border border-emerald-800/80 rounded-xs space-y-1.5">
         <label className="flex items-center gap-2.5 text-xs text-emerald-300 font-bold font-mono cursor-pointer select-none">
           <input
@@ -96,12 +106,12 @@ export function ProductFilters({ filters, onFilterChange, onReset }: ProductFilt
           <span>🏃 SELEÇÃO MARATONA</span>
         </label>
         <p className="text-[10px] text-emerald-400/80 font-mono leading-tight pl-6">
-          Exibir tênis com placa de carbono e alta tecnologia.
+          Exibir tênis masculinos com placa de carbono.
         </p>
       </div>
 
-      {/* 2. MARCAS PARCEIRAS */}
-      <div className="space-y-3">
+      {/* 3. MARCAS PARCEIRAS */}
+      <div className="space-y-3 pt-2">
         <div className="flex items-center justify-between">
           <h4 className="text-[11px] font-bold uppercase tracking-wider text-wolf-300 font-mono">
             MARCA
@@ -144,106 +154,11 @@ export function ProductFilters({ filters, onFilterChange, onReset }: ProductFilt
         </div>
       </div>
 
-      {/* 3. CATEGORIAS DE TÊNIS */}
-      {categories.length > 0 && (
-        <div className="space-y-3 pt-4 border-t border-wolf-800">
-          <div className="flex items-center justify-between">
-            <h4 className="text-[11px] font-bold uppercase tracking-wider text-wolf-300 font-mono">
-              CATEGORIA
-            </h4>
-            {filters.categorySlug && (
-              <button
-                onClick={() => onFilterChange({ ...filters, categorySlug: undefined })}
-                className="text-[10px] font-mono text-accent hover:underline"
-              >
-                Limpar
-              </button>
-            )}
-          </div>
-          <div className="space-y-1.5">
-            {categories.map((cat) => {
-              const isChecked = filters.categorySlug === cat.slug;
-              return (
-                <label
-                  key={cat.id}
-                  className={`flex items-center justify-between px-2.5 py-1.5 rounded-xs text-xs cursor-pointer select-none transition-colors ${
-                    isChecked
-                      ? 'bg-wolf-900 border border-accent/40 text-white font-bold'
-                      : 'text-wolf-300 hover:text-white hover:bg-wolf-900/60'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <input
-                      type="radio"
-                      name="category"
-                      checked={isChecked}
-                      onChange={() => onFilterChange({ ...filters, categorySlug: isChecked ? undefined : cat.slug })}
-                      className="accent-rose-600 w-3.5 h-3.5"
-                    />
-                    <span>{cat.name}</span>
-                  </div>
-                  {isChecked && <Check className="w-3.5 h-3.5 text-accent" />}
-                </label>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* 4. GÊNERO */}
+      {/* 4. NUMERAÇÃO / TAMANHO (BR) — COMPLETO DE 38 A 45 (PROMPT 2) */}
       <div className="space-y-3 pt-4 border-t border-wolf-800">
         <div className="flex items-center justify-between">
           <h4 className="text-[11px] font-bold uppercase tracking-wider text-wolf-300 font-mono">
-            GÊNERO
-          </h4>
-          {filters.gender && (
-            <button
-              onClick={() => onFilterChange({ ...filters, gender: undefined })}
-              className="text-[10px] font-mono text-accent hover:underline"
-            >
-              Limpar
-            </button>
-          )}
-        </div>
-        <div className="space-y-1.5">
-          {[
-            { label: 'Masculino', value: 'masculino' },
-            { label: 'Feminino', value: 'feminino' },
-            { label: 'Infantil', value: 'infantil' },
-            { label: 'Unissex', value: 'unisex' },
-          ].map((g) => {
-            const isChecked = filters.gender === g.value;
-            return (
-              <label
-                key={g.value}
-                className={`flex items-center justify-between px-2.5 py-1.5 rounded-xs text-xs cursor-pointer select-none transition-colors ${
-                  isChecked
-                    ? 'bg-wolf-900 border border-accent/40 text-white font-bold'
-                    : 'text-wolf-300 hover:text-white hover:bg-wolf-900/60'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <input
-                    type="radio"
-                    name="gender"
-                    checked={isChecked}
-                    onChange={() => onFilterChange({ ...filters, gender: isChecked ? undefined : g.value })}
-                    className="accent-rose-600 w-3.5 h-3.5"
-                  />
-                  <span>{g.label}</span>
-                </div>
-                {isChecked && <Check className="w-3.5 h-3.5 text-accent" />}
-              </label>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 5. TAMANHO (BR) — PILLS ESTILO NIKE */}
-      <div className="space-y-3 pt-4 border-t border-wolf-800">
-        <div className="flex items-center justify-between">
-          <h4 className="text-[11px] font-bold uppercase tracking-wider text-wolf-300 font-mono">
-            TAMANHO (BR)
+            TAMANHO MASCULINO (BR)
           </h4>
           {currentSizes.length > 0 && (
             <button
@@ -254,8 +169,8 @@ export function ProductFilters({ filters, onFilterChange, onReset }: ProductFilt
             </button>
           )}
         </div>
-        <div className="grid grid-cols-3 gap-1.5 font-mono text-xs">
-          {AVAILABLE_SIZES.map((sz) => {
+        <div className="grid grid-cols-4 gap-1.5 font-mono text-xs">
+          {MALE_SIZES.map((sz) => {
             const isSelected = currentSizes.includes(sz);
             return (
               <button
@@ -275,7 +190,7 @@ export function ProductFilters({ filters, onFilterChange, onReset }: ProductFilt
         </div>
       </div>
 
-      {/* 6. FAIXA DE PREÇO (PRESETS + INPUTS) */}
+      {/* 5. FAIXA DE PREÇO */}
       <div className="space-y-3 pt-4 border-t border-wolf-800">
         <div className="flex items-center justify-between">
           <h4 className="text-[11px] font-bold uppercase tracking-wider text-wolf-300 font-mono">

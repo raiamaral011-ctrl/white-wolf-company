@@ -11,18 +11,12 @@ function ProdutosContent() {
   const categorySlug = searchParams.get('categoria') || searchParams.get('category') || undefined;
   const genderFilter = searchParams.get('genero') || searchParams.get('gender') || undefined;
 
-  let title = 'TODOS OS TÊNIS';
-  let subtitle = 'Explore a coleção completa de tênis esportivos de elite, corrida de rua, maratona e treino.';
+  let title = 'TÊNIS MASCULINOS DE ELITE';
+  let subtitle = 'Explore a coleção oficial de tênis esportivos masculinos: corrida de rua, maratona e treino.';
 
-  if (brandSlug && categorySlug) {
-    title = `TÊNIS ${brandSlug.toUpperCase()} • ${categorySlug.toUpperCase()}`;
-    subtitle = `Filtrando tênis da marca ${brandSlug.toUpperCase()} para ${categorySlug.toUpperCase()}.`;
-  } else if (brandSlug) {
-    title = `TÊNIS ${brandSlug.toUpperCase()}`;
-    subtitle = `Confira a coleção oficial de calçados esportivos ${brandSlug.toUpperCase()}.`;
-  } else if (categorySlug) {
-    title = `TÊNIS • ${categorySlug.toUpperCase()}`;
-    subtitle = `Seleção de tênis de alta performance para ${categorySlug.toUpperCase()}.`;
+  if (brandSlug) {
+    title = `TÊNIS MASCULINOS ${brandSlug.toUpperCase()}`;
+    subtitle = `Confira a coleção oficial de calçados masculinos ${brandSlug.toUpperCase()}.`;
   }
 
   return (

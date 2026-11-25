@@ -11,7 +11,7 @@ import { SearchModal } from './SearchModal';
 import { UserMenu } from './UserMenu';
 import {
   Search, Heart, ShoppingBag, Menu, X, ChevronDown, ChevronRight,
-  Flame, Zap, Award, Sparkles, User, Package, Truck, ArrowRight
+  Flame, Award, Truck, ArrowRight
 } from 'lucide-react';
 
 const TOP_ANNOUNCEMENTS = [
@@ -46,7 +46,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 bg-wolf-950/95 backdrop-blur-md border-b border-wolf-800">
-      {/* 1. TOP TICKER / PROMO ANNOUNCEMENT BAR (ESTILO NIKE) */}
+      {/* 1. TOP TICKER / PROMO ANNOUNCEMENT BAR */}
       <div className="bg-black text-wolf-300 border-b border-wolf-900 py-1.5 px-4 text-center overflow-hidden">
         <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px] font-mono tracking-wider">
           <div className="hidden md:flex items-center gap-4 text-wolf-500">
@@ -78,7 +78,7 @@ export function Header() {
       {/* 2. BRAND BAR ACCELERATOR (PARCEIRAS OFICIAIS) */}
       <BrandBar />
 
-      {/* 3. MAIN HEADER BAR */}
+      {/* 3. MAIN HEADER BAR (LOJA EXCLUSIVAMENTE MASCULINA) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
         {/* Mobile menu trigger */}
         <button
@@ -95,12 +95,12 @@ export function Header() {
             WHITE WOLF <span className="text-accent font-light">CO.</span>
           </span>
           <span className="text-[9px] uppercase tracking-[0.25em] font-mono text-wolf-400 font-semibold -mt-1 group-hover:text-wolf-300">
-            PERFORMANCE &amp; STYLE
+            MEN&apos;S PERFORMANCE FOOTWEAR
           </span>
         </Link>
 
-        {/* DESKTOP NAVIGATION MENU (ESTILO NIKE: CLARO, ESTRUTURADO E ACESSÍVEL) */}
-        <nav className="hidden lg:flex items-center gap-5 xl:gap-7 text-xs font-bold uppercase tracking-wider text-wolf-300 h-full">
+        {/* DESKTOP NAVIGATION MENU (ESTILO NIKE: FOCO TOTAL EM TÊNIS MASCULINOS) */}
+        <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-xs font-bold uppercase tracking-wider text-wolf-300 h-full">
           {/* Início */}
           <Link
             href="/"
@@ -120,7 +120,7 @@ export function Header() {
             <Link
               href="/produtos"
               className={`flex items-center gap-1 py-6 hover:text-white transition-colors ${
-                pathname === '/produtos' && !pathname.includes('genero') ? 'text-white' : ''
+                pathname === '/produtos' ? 'text-white' : ''
               }`}
             >
               TODOS OS TÊNIS
@@ -130,19 +130,19 @@ export function Header() {
             {/* Dropdown Menu */}
             <div className="absolute top-full left-0 hidden group-hover:block w-64 bg-wolf-950 border border-wolf-800 shadow-2xl p-4 space-y-2 z-50">
               <div className="text-[10px] font-mono text-wolf-500 uppercase tracking-widest pb-1 border-b border-wolf-800">
-                Categorias Principais
+                Coleção Masculina
               </div>
-              <Link href="/produtos" className="block text-white hover:text-accent font-mono text-xs py-1.5 transition-colors">
+              <Link href="/produtos" className="block text-white hover:text-accent font-mono text-xs py-1.5 transition-colors font-bold">
                 👟 Ver Todos os Calçados
               </Link>
-              <Link href="/tenis/masculino" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1.5 transition-colors">
-                Tênis Masculino
+              <Link href="/produtos?sport=corrida" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1.5 transition-colors">
+                Corrida de Rua
               </Link>
-              <Link href="/tenis/feminino" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1.5 transition-colors">
-                Tênis Feminino
+              <Link href="/produtos?sport=academia" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1.5 transition-colors">
+                Treino &amp; Academia
               </Link>
-              <Link href="/tenis/infantil" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1.5 transition-colors">
-                Tênis Infantil
+              <Link href="/produtos?sport=lifestyle" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1.5 transition-colors">
+                Casual &amp; Lifestyle
               </Link>
               <Link href="/maratona" className="block text-emerald-400 hover:text-emerald-300 font-mono text-xs py-1.5 border-t border-wolf-800/80 pt-2 font-bold flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -154,92 +154,6 @@ export function Header() {
               </Link>
             </div>
           </div>
-
-          {/* Masculino */}
-          <div
-            className="relative h-full flex items-center group cursor-pointer"
-            onMouseEnter={() => setActiveDropdown('masculino')}
-            onMouseLeave={() => setActiveDropdown(null)}
-          >
-            <Link
-              href="/tenis/masculino"
-              className={`flex items-center gap-1 py-6 hover:text-white transition-colors ${
-                pathname === '/tenis/masculino' || pathname.includes('masculino') ? 'text-white' : ''
-              }`}
-            >
-              MASCULINO
-              <ChevronDown className="w-3.5 h-3.5 text-wolf-500 group-hover:text-white transition-transform group-hover:rotate-180" />
-            </Link>
-
-            <div className="absolute top-full left-0 hidden group-hover:block w-60 bg-wolf-950 border border-wolf-800 shadow-2xl p-4 space-y-2 z-50">
-              <div className="text-[10px] font-mono text-wolf-500 uppercase tracking-widest pb-1 border-b border-wolf-800">
-                Tênis Masculinos
-              </div>
-              <Link href="/tenis/masculino" className="block text-white hover:text-accent font-mono text-xs py-1.5 font-bold transition-colors">
-                Ver Todos Masculinos →
-              </Link>
-              <Link href="/produtos?genero=masculino&sport=corrida" className="block text-wolf-300 hover:text-white font-mono text-xs py-1.5 transition-colors">
-                Corrida de Rua
-              </Link>
-              <Link href="/produtos?genero=masculino&sport=academia" className="block text-wolf-300 hover:text-white font-mono text-xs py-1.5 transition-colors">
-                Treino &amp; Academia
-              </Link>
-              <Link href="/produtos?genero=masculino&sport=lifestyle" className="block text-wolf-300 hover:text-white font-mono text-xs py-1.5 transition-colors">
-                Casual &amp; Lifestyle
-              </Link>
-              <Link href="/maratona" className="block text-emerald-400 hover:text-emerald-300 font-mono text-xs py-1.5 border-t border-wolf-800/80 pt-2 font-bold">
-                Placa de Carbono Masculino
-              </Link>
-            </div>
-          </div>
-
-          {/* Feminino */}
-          <div
-            className="relative h-full flex items-center group cursor-pointer"
-            onMouseEnter={() => setActiveDropdown('feminino')}
-            onMouseLeave={() => setActiveDropdown(null)}
-          >
-            <Link
-              href="/tenis/feminino"
-              className={`flex items-center gap-1 py-6 hover:text-white transition-colors ${
-                pathname === '/tenis/feminino' || pathname.includes('feminino') ? 'text-white' : ''
-              }`}
-            >
-              FEMININO
-              <ChevronDown className="w-3.5 h-3.5 text-wolf-500 group-hover:text-white transition-transform group-hover:rotate-180" />
-            </Link>
-
-            <div className="absolute top-full left-0 hidden group-hover:block w-60 bg-wolf-950 border border-wolf-800 shadow-2xl p-4 space-y-2 z-50">
-              <div className="text-[10px] font-mono text-wolf-500 uppercase tracking-widest pb-1 border-b border-wolf-800">
-                Tênis Femininos
-              </div>
-              <Link href="/tenis/feminino" className="block text-white hover:text-accent font-mono text-xs py-1.5 font-bold transition-colors">
-                Ver Todos Femininos →
-              </Link>
-              <Link href="/produtos?genero=feminino&sport=corrida" className="block text-wolf-300 hover:text-white font-mono text-xs py-1.5 transition-colors">
-                Corrida &amp; Caminhada
-              </Link>
-              <Link href="/produtos?genero=feminino&sport=academia" className="block text-wolf-300 hover:text-white font-mono text-xs py-1.5 transition-colors">
-                Treino &amp; Academia
-              </Link>
-              <Link href="/produtos?genero=feminino&sport=lifestyle" className="block text-wolf-300 hover:text-white font-mono text-xs py-1.5 transition-colors">
-                Casual &amp; Estilo Urbano
-              </Link>
-              <Link href="/maratona" className="block text-emerald-400 hover:text-emerald-300 font-mono text-xs py-1.5 border-t border-wolf-800/80 pt-2 font-bold">
-                Performance &amp; Maratona
-              </Link>
-            </div>
-          </div>
-
-          {/* Infantil */}
-          <Link
-            href="/tenis/infantil"
-            className={`py-6 hover:text-white transition-colors ${
-              pathname === '/tenis/infantil' || pathname.includes('infantil') ? 'text-white' : ''
-            }`}
-          >
-            INFANTIL
-          </Link>
 
           {/* Maratona (Destaque Performance) */}
           <Link
@@ -268,7 +182,7 @@ export function Header() {
 
             <div className="absolute top-full left-0 hidden group-hover:block w-56 bg-wolf-950 border border-wolf-800 shadow-2xl p-4 space-y-2 z-50">
               <div className="text-[10px] font-mono text-wolf-500 uppercase tracking-widest pb-1 border-b border-wolf-800">
-                Marcas Parceiras
+                Marcas Parceiras Oficiais
               </div>
               <Link href="/marca/nike" className="block text-wolf-300 hover:text-white font-mono text-xs py-1.5 transition-colors">
                 Nike Running &amp; Air
@@ -307,7 +221,7 @@ export function Header() {
           <button
             onClick={() => setIsSearchOpen(true)}
             className="hidden sm:flex items-center gap-2.5 px-3.5 py-2 bg-wolf-900/80 hover:bg-wolf-900 border border-wolf-800 rounded-full text-wolf-400 hover:text-white transition-all text-xs font-mono group"
-            title="Buscar tênis por nome, marca ou categoria"
+            title="Buscar tênis por nome, modelo ou marca"
           >
             <Search className="w-4 h-4 text-wolf-400 group-hover:text-accent transition-colors" />
             <span className="text-wolf-400 group-hover:text-wolf-300">Buscar produtos...</span>
@@ -356,7 +270,7 @@ export function Header() {
         </div>
       </div>
 
-      {/* 4. MOBILE NAVIGATION DRAWER (ADAPTADA, INTUITIVA E RÁPIDA) */}
+      {/* 4. MOBILE NAVIGATION DRAWER (100% MASCULINO, RÁPIDO E INTUITIVO) */}
       {isMobileMenuOpen && (
         <div className="lg:hidden fixed inset-x-0 top-[110px] bottom-0 bg-wolf-950/98 backdrop-blur-xl border-b border-wolf-800 overflow-y-auto p-6 space-y-6 z-50 animate-fadeIn">
           {/* Mobile Search Trigger Bar */}
@@ -368,13 +282,13 @@ export function Header() {
             className="w-full flex items-center gap-3 px-4 py-3 bg-wolf-900 border border-wolf-800 rounded-sm text-wolf-400 text-xs font-mono"
           >
             <Search className="w-4 h-4 text-accent" />
-            <span>Buscar por tênis, marca, corrida...</span>
+            <span>Buscar por tênis, modelo, corrida...</span>
           </button>
 
-          {/* Categorias Principais */}
+          {/* Categorias Principais Masculinas */}
           <div className="space-y-1 border-b border-wolf-800 pb-4">
             <span className="text-[10px] font-mono text-wolf-500 uppercase tracking-widest block mb-2">
-              NAVEGAÇÃO POR CATEGORIA
+              COLEÇÃO MASCULINA DE TÊNIS
             </span>
 
             <Link
@@ -392,33 +306,6 @@ export function Header() {
               className="flex items-center justify-between py-2.5 text-sm font-bold uppercase text-white hover:text-accent border-b border-wolf-900"
             >
               <span>Todos os Tênis</span>
-              <ChevronRight className="w-4 h-4 text-wolf-600" />
-            </Link>
-
-            <Link
-              href="/tenis/masculino"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center justify-between py-2.5 text-sm font-bold uppercase text-white hover:text-accent border-b border-wolf-900"
-            >
-              <span>Masculino</span>
-              <span className="text-[10px] font-mono text-wolf-400 uppercase">Corrida / Treino</span>
-            </Link>
-
-            <Link
-              href="/tenis/feminino"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center justify-between py-2.5 text-sm font-bold uppercase text-white hover:text-accent border-b border-wolf-900"
-            >
-              <span>Feminino</span>
-              <span className="text-[10px] font-mono text-wolf-400 uppercase">Performance</span>
-            </Link>
-
-            <Link
-              href="/tenis/infantil"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center justify-between py-2.5 text-sm font-bold uppercase text-white hover:text-accent border-b border-wolf-900"
-            >
-              <span>Infantil</span>
               <ChevronRight className="w-4 h-4 text-wolf-600" />
             </Link>
 
@@ -488,7 +375,6 @@ export function Header() {
               onClick={() => setIsMobileMenuOpen(false)}
               className="flex items-center gap-3 p-3 bg-wolf-900/60 border border-wolf-800 rounded-sm text-wolf-200 hover:text-white"
             >
-              <User className="w-4 h-4 text-accent" />
               <span>Minha Conta / Meus Pedidos</span>
             </Link>
             <Link
@@ -496,7 +382,6 @@ export function Header() {
               onClick={() => setIsMobileMenuOpen(false)}
               className="flex items-center gap-3 p-3 bg-wolf-900/60 border border-wolf-800 rounded-sm text-wolf-200 hover:text-white"
             >
-              <Heart className="w-4 h-4 text-rose-500" />
               <span>Meus Favoritos ({favoritesCount})</span>
             </Link>
           </div>

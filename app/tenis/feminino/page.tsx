@@ -1,12 +1,5 @@
-import { CategoryCatalog } from '@/components/product/CategoryCatalog';
+import { redirect } from 'next/navigation';
 
 export default function TenisFemininoPage() {
-  return (
-    <CategoryCatalog
-      title="TÊNIS FEMININOS"
-      subtitle="Modelos femininos com ajuste ergonômico e alto amortecimento."
-      categorySlug="tenis"
-      genderFilter="feminino"
-    />
-  );
+  redirect('/produtos');
 }

@@ -185,6 +185,7 @@ export interface FilterOptions {
   categorySlug?: string;
   gender?: string;
   isMaratona?: boolean;
+  inStockOnly?: boolean;
   minPrice?: number;
   maxPrice?: number;
   sizes?: string[];

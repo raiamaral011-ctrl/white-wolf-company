@@ -341,41 +341,41 @@ export default function HomePage() {
                   </div>
                 </Link>
 
-                {/* Masculino */}
+                {/* Amortecimento & Performance */}
                 <Link
-                  href="/tenis/masculino"
+                  href="/produtos?sport=running"
                   className="group relative min-h-[260px] bg-wolf-900 border border-wolf-800 hover:border-accent rounded-sm overflow-hidden p-6 flex flex-col justify-end transition-all shadow-xl"
                 >
                   <Image
                     src="https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800&auto=format&fit=crop&q=80"
-                    alt="Tênis Masculino"
+                    alt="Tênis com Amortecimento"
                     fill
                     className="object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-wolf-950 via-wolf-950/50 to-transparent" />
                   <div className="relative z-10 space-y-1">
-                    <span className="text-[10px] font-mono text-accent uppercase font-bold">SELEÇÃO</span>
-                    <h3 className="text-2xl font-black uppercase font-heading text-white">TÊNIS MASCULINO</h3>
-                    <span className="text-xs font-mono text-white underline underline-offset-4 font-bold">VER LINHA COMPLETA →</span>
+                    <span className="text-[10px] font-mono text-accent uppercase font-bold">TECNOLOGIA</span>
+                    <h3 className="text-2xl font-black uppercase font-heading text-white">MÁXIMO AMORTECIMENTO</h3>
+                    <span className="text-xs font-mono text-white underline underline-offset-4 font-bold">VER MODELOS →</span>
                   </div>
                 </Link>
 
-                {/* Feminino */}
+                {/* Coleção Completa */}
                 <Link
-                  href="/tenis/feminino"
+                  href="/produtos"
                   className="group relative min-h-[260px] bg-wolf-900 border border-wolf-800 hover:border-accent rounded-sm overflow-hidden p-6 flex flex-col justify-end transition-all shadow-xl"
                 >
                   <Image
                     src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&auto=format&fit=crop&q=80"
-                    alt="Tênis Feminino"
+                    alt="Coleção Masculina Completa"
                     fill
                     className="object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-wolf-950 via-wolf-950/50 to-transparent" />
                   <div className="relative z-10 space-y-1">
-                    <span className="text-[10px] font-mono text-accent uppercase font-bold">SELEÇÃO</span>
-                    <h3 className="text-2xl font-black uppercase font-heading text-white">TÊNIS FEMININO</h3>
-                    <span className="text-xs font-mono text-white underline underline-offset-4 font-bold">VER LINHA COMPLETA →</span>
+                    <span className="text-[10px] font-mono text-accent uppercase font-bold">TODOS OS MODELOS</span>
+                    <h3 className="text-2xl font-black uppercase font-heading text-white">COLEÇÃO MASCULINA</h3>
+                    <span className="text-xs font-mono text-white underline underline-offset-4 font-bold">EXPLORAR TUDO →</span>
                   </div>
                 </Link>
 

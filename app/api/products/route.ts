@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Product } from '@/types';
 import { MOCK_PRODUCTS } from '@/lib/data/products';
+import { normalizeText } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +12,6 @@ export async function GET(req: Request) {
   const slug = searchParams.get('slug');
   const brandSlug = searchParams.get('brand') || searchParams.get('marca');
   const categorySlug = searchParams.get('category') || searchParams.get('categoria');
-  const gender = searchParams.get('gender') || searchParams.get('genero');
   const sport = searchParams.get('sport');
   const size = searchParams.get('size') || searchParams.get('tamanho');
   const minPriceParam = searchParams.get('minPrice');
@@ -21,6 +21,7 @@ export async function GET(req: Request) {
   const sale = searchParams.get('sale');
   const featured = searchParams.get('featured');
   const maratonaParam = searchParams.get('maratona') || searchParams.get('is_maratona');
+  const inStockParam = searchParams.get('inStock') || searchParams.get('disponibilidade');
 
   try {
     const supabase = createAdminClient();
@@ -60,87 +61,89 @@ export async function GET(req: Request) {
       productsList = [...MOCK_PRODUCTS];
     }
 
-    // Exclude Roupas, Vestuário and Acessórios from public catalog
+    // =========================================================================
+    // PROMPT 2 REGRA FUNDAMENTAL: LOJA PÚBLICA EXCLUSIVAMENTE MASCULINA DE TÊNIS
+    // 1. Somente tênis masculinos podem aparecer (p.gender === 'masculino').
+    // 2. Produtos femininos e infantis NUNCA podem aparecer na loja pública.
+    // 3. Roupas, camisetas, calças, shorts, jaquetas, bonés e acessórios NUNCA podem aparecer.
+    // 4. Produtos com classificação duvidosa não são classificados como masculinos.
+    // =========================================================================
     productsList = productsList.filter((p) => {
-      const catSlug = p.category?.slug?.toLowerCase() || '';
-      return (
-        catSlug !== 'roupas' &&
-        catSlug !== 'acessorios' &&
-        catSlug !== 'camisetas' &&
-        catSlug !== 'shorts' &&
-        catSlug !== 'calcas' &&
-        catSlug !== 'jaquetas'
+      // Regra 1: Gênero estritamente masculino
+      const isMasculino = (p.gender?.toLowerCase() === 'masculino');
+      if (!isMasculino) return false;
+
+      // Regra 2: Categoria deve ser calçado / tênis (excluir vestuário e acessórios)
+      const catSlug = (p.category?.slug || '').toLowerCase();
+      const catName = (p.category?.name || '').toLowerCase();
+      const isNonShoe = (
+        catSlug.includes('roupa') ||
+        catSlug.includes('vestuario') ||
+        catSlug.includes('camiseta') ||
+        catSlug.includes('calca') ||
+        catSlug.includes('short') ||
+        catSlug.includes('jaqueta') ||
+        catSlug.includes('acessorio') ||
+        catSlug.includes('bone') ||
+        catSlug.includes('bolsa') ||
+        catName.includes('Roupa') ||
+        catName.includes('Acessório')
       );
+      if (isNonShoe) return false;
+
+      return true;
     });
 
     // Single product lookup by slug
     if (slug) {
       const single = productsList.find((p) => p.slug === slug) || null;
-      return NextResponse.json(single);
+      return new NextResponse(JSON.stringify(single), {
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      });
     }
 
-    // APPLY STRICT FILTERS (AND LOGIC)
+    // =========================================================================
+    // APLICAÇÃO DOS FILTROS PERMITIDOS (MARCA, TAMANHO, PREÇO, ESTOQUE, MARATONA, BUSCA)
+    // NOTA: Conforme Prompt 2, os filtros públicos de Categoria e Gênero foram removidos.
+    // =========================================================================
     let filtered = productsList;
 
-    // 0. MARATONA FILTER (Strict boolean)
+    // 1. FILTRO DE MARATONA (Alta Performance)
     if (maratonaParam === 'true') {
       filtered = filtered.filter((p) => p.is_maratona === true);
     }
 
-    // 1. BRAND FILTER (Strict equality on brand slug or name)
+    // 2. FILTRO DE MARCA (Strict equality on brand slug or name)
     if (brandSlug && brandSlug.trim()) {
       const targetBrand = brandSlug.trim().toLowerCase();
       filtered = filtered.filter((p) => {
-        const pBrandSlug = p.brand?.slug?.toLowerCase() || '';
-        const pBrandName = p.brand?.name?.toLowerCase() || '';
+        const pBrandSlug = (p.brand?.slug || '').toLowerCase();
+        const pBrandName = (p.brand?.name || '').toLowerCase();
         return pBrandSlug === targetBrand || pBrandName === targetBrand;
       });
     }
 
-    // 2. CATEGORY FILTER (Strict equality on category slug or name)
-    if (categorySlug && categorySlug.trim()) {
-      const targetCat = categorySlug.trim().toLowerCase();
-      filtered = filtered.filter((p) => {
-        const pCatSlug = p.category?.slug?.toLowerCase() || '';
-        const pCatName = p.category?.name?.toLowerCase() || '';
-        return pCatSlug === targetCat || pCatName === targetCat;
-      });
-    }
-
-    // 3. GENDER FILTER
-    if (gender && gender.trim()) {
-      const targetGender = gender.trim().toLowerCase();
-      filtered = filtered.filter((p) => {
-        const pGender = p.gender?.toLowerCase() || 'unisex';
-        return pGender === targetGender || pGender === 'unisex';
-      });
-    }
-
-    // 4. SPORT FILTER
-    if (sport && sport.trim()) {
-      const targetSport = sport.trim().toLowerCase();
-      filtered = filtered.filter((p) => {
-        const pSport = p.sport?.toLowerCase() || 'general';
-        const pName = p.name?.toLowerCase() || '';
-        const pDesc = p.description?.toLowerCase() || '';
-        return (
-          pSport === targetSport ||
-          pName.includes(targetSport) ||
-          pDesc.includes(targetSport)
-        );
-      });
-    }
-
-    // 5. SIZE FILTER
+    // 3. FILTRO DE TAMANHO (Suporta tamanhos individuais ou múltiplos até 45)
     if (size && size.trim()) {
-      const targetSize = size.trim();
+      const targetSizes = size.split(',').map((s) => s.trim());
       filtered = filtered.filter((p) => {
         if (!p.variants || p.variants.length === 0) return true;
-        return p.variants.some((v) => String(v.size) === targetSize && Number(v.stock) > 0);
+        return p.variants.some((v) => targetSizes.includes(String(v.size)) && Number(v.stock) > 0);
       });
     }
 
-    // 6. PRICE RANGE FILTERS
+    // 4. FILTRO DE DISPONIBILIDADE EM ESTOQUE
+    if (inStockParam === 'true' || inStockParam === 'em_estoque') {
+      filtered = filtered.filter((p) => {
+        if (!p.variants || p.variants.length === 0) return true;
+        const totalStock = p.variants.reduce((sum, v) => sum + (v.stock || 0), 0);
+        return totalStock > 0;
+      });
+    }
+
+    // 5. FILTRO DE FAIXA DE PREÇO
     if (minPriceParam) {
       const minPrice = parseFloat(minPriceParam);
       if (!isNaN(minPrice)) {
@@ -155,26 +158,27 @@ export async function GET(req: Request) {
       }
     }
 
-    // 7. SEARCH QUERY FILTER
+    // 6. BUSCA TEXTUAL NORMALIZADA (COM E SEM ACENTUAÇÃO)
+    // Ex: "tenis" encontra "tênis", "promocao" encontra "promoção"
     if (q && q.trim()) {
-      const term = q.trim().toLowerCase();
+      const normQ = normalizeText(q);
       filtered = filtered.filter((p) => {
-        const name = p.name?.toLowerCase() || '';
-        const brandName = p.brand?.name?.toLowerCase() || '';
-        const catName = p.category?.name?.toLowerCase() || '';
-        const sku = p.sku?.toLowerCase() || '';
-        const desc = p.description?.toLowerCase() || '';
+        const name = normalizeText(p.name);
+        const brandName = normalizeText(p.brand?.name);
+        const catName = normalizeText(p.category?.name);
+        const sku = normalizeText(p.sku);
+        const desc = normalizeText(p.description);
         return (
-          name.includes(term) ||
-          brandName.includes(term) ||
-          catName.includes(term) ||
-          sku.includes(term) ||
-          desc.includes(term)
+          name.includes(normQ) ||
+          brandName.includes(normQ) ||
+          catName.includes(normQ) ||
+          sku.includes(normQ) ||
+          desc.includes(normQ)
         );
       });
     }
 
-    // 8. SORTING
+    // 7. ORDENAÇÃO
     if (sort) {
       const s = sort.toLowerCase();
       if (s === 'price_asc' || s === 'price-asc' || s === 'menor-preco') {
@@ -192,9 +196,18 @@ export async function GET(req: Request) {
       }
     }
 
-    return NextResponse.json(filtered);
+    return new NextResponse(JSON.stringify(filtered), {
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+      },
+    });
   } catch (err: any) {
     console.error('Error in GET /api/products:', err);
-    return NextResponse.json([]);
+    return new NextResponse(JSON.stringify([]), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+      },
+    });
   }
 }

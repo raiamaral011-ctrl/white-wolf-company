@@ -6,27 +6,27 @@ import { Footer } from '@/components/footer/Footer';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { ProductFilters } from '@/components/product/ProductFilters';
 import { FilterOptions, Product } from '@/types';
+import { normalizeText } from '@/lib/utils';
 import {
-  RefreshCw, Search, X, SlidersHorizontal, ArrowUpDown, ChevronDown,
-  RotateCcw, Sparkles
+  RefreshCw, Search, X, SlidersHorizontal, ChevronDown,
+  RotateCcw, CheckCircle2
 } from 'lucide-react';
 
 interface CategoryCatalogProps {
   title: string;
   subtitle: string;
-  categorySlug?: string;
   brandSlug?: string;
-  genderFilter?: string;
   isMaratona?: boolean;
   onlySale?: boolean;
+  // Kept for backward compatibility if routes pass it, but internal filters ignore them
+  categorySlug?: string;
+  genderFilter?: string;
 }
 
 export function CategoryCatalog({
   title,
   subtitle,
-  categorySlug,
   brandSlug,
-  genderFilter,
   isMaratona,
   onlySale,
 }: CategoryCatalogProps) {
@@ -36,34 +36,31 @@ export function CategoryCatalog({
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   const [filters, setFilters] = useState<FilterOptions>({
-    categorySlug,
     brandSlug,
-    gender: genderFilter,
     isMaratona,
     sort: 'relevance',
+    inStockOnly: false,
+    sizes: [],
   });
 
-  // Keep initial props synced
+  // Keep brandSlug and isMaratona in sync if props change
   useEffect(() => {
     setFilters((prev) => ({
       ...prev,
-      categorySlug: categorySlug ?? prev.categorySlug,
       brandSlug: brandSlug ?? prev.brandSlug,
-      gender: genderFilter ?? prev.gender,
       isMaratona: isMaratona ?? prev.isMaratona,
     }));
-  }, [categorySlug, brandSlug, genderFilter, isMaratona]);
+  }, [brandSlug, isMaratona]);
 
-  // Fetch products from live database
+  // Fetch products from live database via API (which enforces masculine shoes only)
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
         const params = new URLSearchParams();
-        if (filters.categorySlug) params.set('category', filters.categorySlug);
         if (filters.brandSlug) params.set('brand', filters.brandSlug);
-        if (filters.gender) params.set('gender', filters.gender);
         if (filters.isMaratona) params.set('maratona', 'true');
+        if (filters.inStockOnly) params.set('inStock', 'true');
         if (filters.minPrice !== undefined) params.set('minPrice', String(filters.minPrice));
         if (filters.maxPrice !== undefined) params.set('maxPrice', String(filters.maxPrice));
         if (filters.sort) params.set('sort', filters.sort);
@@ -87,10 +84,9 @@ export function CategoryCatalog({
 
     fetchProducts();
   }, [
-    filters.categorySlug,
     filters.brandSlug,
-    filters.gender,
     filters.isMaratona,
+    filters.inStockOnly,
     filters.minPrice,
     filters.maxPrice,
     filters.sort,
@@ -98,35 +94,29 @@ export function CategoryCatalog({
     onlySale,
   ]);
 
-  // Client-side filtering logic for multi-size, maratona, sale and search query
+  // Client-side filtering logic (ensuring strict compliance with masculine shoe catalog)
   const displayedProducts = allProducts.filter((p) => {
-    // 0. Maratona Check
+    // 0. Strict Masculine check (double guarantee)
+    if (p.gender?.toLowerCase() !== 'masculino') return false;
+
+    // 1. Maratona Check
     if (filters.isMaratona && !p.is_maratona) return false;
 
-    // 1. Sale check
+    // 2. Sale check
     if (onlySale && !p.is_sale) return false;
 
-    // 2. Brand Check (strict equality)
+    // 3. Brand Check (strict equality)
     if (filters.brandSlug) {
       const targetBrand = filters.brandSlug.toLowerCase();
-      const pBrandSlug = p.brand?.slug?.toLowerCase() || '';
-      const pBrandName = p.brand?.name?.toLowerCase() || '';
+      const pBrandSlug = (p.brand?.slug || '').toLowerCase();
+      const pBrandName = (p.brand?.name || '').toLowerCase();
       if (pBrandSlug !== targetBrand && pBrandName !== targetBrand) return false;
     }
 
-    // 3. Category Check
-    if (filters.categorySlug) {
-      const targetCat = filters.categorySlug.toLowerCase();
-      const pCatSlug = p.category?.slug?.toLowerCase() || '';
-      const pCatName = p.category?.name?.toLowerCase() || '';
-      if (pCatSlug !== targetCat && pCatName !== targetCat) return false;
-    }
-
-    // 4. Gender Check
-    if (filters.gender) {
-      const targetGender = filters.gender.toLowerCase();
-      const pGender = p.gender?.toLowerCase() || 'unisex';
-      if (pGender !== targetGender && pGender !== 'unisex') return false;
+    // 4. Stock Availability Filter
+    if (filters.inStockOnly) {
+      const totalStock = (p.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0);
+      if (totalStock <= 0) return false;
     }
 
     // 5. Price Min
@@ -144,13 +134,14 @@ export function CategoryCatalog({
       if (!hasSelectedSize) return false;
     }
 
-    // 8. In-catalog Name Search
+    // 8. In-catalog Accent-Insensitive Search
     if (searchQuery.trim()) {
-      const term = searchQuery.toLowerCase().trim();
-      const name = p.name.toLowerCase();
-      const brand = p.brand?.name?.toLowerCase() || '';
-      const cat = p.category?.name?.toLowerCase() || '';
-      if (!name.includes(term) && !brand.includes(term) && !cat.includes(term)) {
+      const normQ = normalizeText(searchQuery);
+      const name = normalizeText(p.name);
+      const brand = normalizeText(p.brand?.name);
+      const desc = normalizeText(p.description);
+      const sku = normalizeText(p.sku);
+      if (!name.includes(normQ) && !brand.includes(normQ) && !desc.includes(normQ) && !sku.includes(normQ)) {
         return false;
       }
     }
@@ -179,10 +170,10 @@ export function CategoryCatalog({
 
   const handleReset = () => {
     setFilters({
-      categorySlug: categorySlug,
       brandSlug: brandSlug,
-      gender: genderFilter,
+      isMaratona: isMaratona,
       sort: 'relevance',
+      inStockOnly: false,
       minPrice: undefined,
       maxPrice: undefined,
       sizes: [],
@@ -190,12 +181,11 @@ export function CategoryCatalog({
     setSearchQuery('');
   };
 
-  // Count active non-default filters
+  // Count active non-default filters (exclusive of category/gender)
   const activeFiltersCount =
     (filters.brandSlug && filters.brandSlug !== brandSlug ? 1 : 0) +
-    (filters.categorySlug && filters.categorySlug !== categorySlug ? 1 : 0) +
-    (filters.gender && filters.gender !== genderFilter ? 1 : 0) +
     (filters.isMaratona && !isMaratona ? 1 : 0) +
+    (filters.inStockOnly ? 1 : 0) +
     (filters.minPrice !== undefined || filters.maxPrice !== undefined ? 1 : 0) +
     (filters.sizes && filters.sizes.length > 0 ? filters.sizes.length : 0) +
     (searchQuery.trim() ? 1 : 0);
@@ -209,7 +199,7 @@ export function CategoryCatalog({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-mono text-accent uppercase tracking-widest font-bold bg-accent/10 border border-accent/30 px-2.5 py-0.5 rounded-xs">
-              CATÁLOGO OFICIAL WHITE WOLF
+              COLEÇÃO MASCULINA EXCLUSIVA
             </span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-black uppercase font-heading tracking-tight">
@@ -224,7 +214,7 @@ export function CategoryCatalog({
       {/* MAIN CATALOG AREA */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* DESKTOP FILTERS SIDEBAR */}
+          {/* DESKTOP FILTERS SIDEBAR (NO CATEGORY / NO GENDER) */}
           <div className="hidden lg:block shrink-0">
             <ProductFilters
               filters={filters}
@@ -237,12 +227,12 @@ export function CategoryCatalog({
           <div className="flex-1 space-y-6">
             {/* TOP CONTROLS BAR: SEARCH, MOBILE FILTER TRIGGER, SORTING */}
             <div className="bg-wolf-900/80 border border-wolf-800 rounded-sm p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-              {/* In-Catalog Search Bar */}
+              {/* In-Catalog Search Bar (Accent Insensitive) */}
               <div className="relative flex-1 max-w-md">
                 <Search className="w-4 h-4 text-wolf-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Pesquisar tênis por nome ou modelo..."
+                  placeholder="Pesquisar tênis por nome ou modelo (ex: Air Max, Campus)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-wolf-950 border border-wolf-800 pl-9 pr-8 py-2 text-xs text-white placeholder-wolf-500 rounded-xs focus:outline-none focus:border-accent font-sans"
@@ -295,7 +285,7 @@ export function CategoryCatalog({
               </div>
             </div>
 
-            {/* ACTIVE FILTER BADGES (ESTILO NIKE) */}
+            {/* ACTIVE FILTER BADGES (MARCA, TAMANHO, PREÇO, ESTOQUE, MARATONA, BUSCA) */}
             {activeFiltersCount > 0 && (
               <div className="flex flex-wrap items-center gap-2 p-3 bg-wolf-900/40 border border-wolf-800/80 rounded-xs">
                 <span className="text-[10px] font-mono text-wolf-400 uppercase tracking-wider mr-1">
@@ -312,31 +302,21 @@ export function CategoryCatalog({
                   </span>
                 )}
 
+                {/* In Stock Badge */}
+                {filters.inStockOnly && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-wolf-900 border border-wolf-700 text-xs font-mono text-emerald-400 rounded-xs">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Em Estoque
+                    <button onClick={() => handleFilterChange({ ...filters, inStockOnly: false })} className="text-wolf-400 hover:text-accent">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+
                 {/* Brand Badge */}
                 {filters.brandSlug && filters.brandSlug !== brandSlug && (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-wolf-900 border border-wolf-700 text-xs font-mono text-white rounded-xs uppercase">
                     Marca: {filters.brandSlug}
                     <button onClick={() => handleFilterChange({ ...filters, brandSlug: undefined })} className="text-wolf-400 hover:text-accent">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
-
-                {/* Category Badge */}
-                {filters.categorySlug && filters.categorySlug !== categorySlug && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-wolf-900 border border-wolf-700 text-xs font-mono text-white rounded-xs uppercase">
-                    Cat: {filters.categorySlug}
-                    <button onClick={() => handleFilterChange({ ...filters, categorySlug: undefined })} className="text-wolf-400 hover:text-accent">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
-
-                {/* Gender Badge */}
-                {filters.gender && filters.gender !== genderFilter && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-wolf-900 border border-wolf-700 text-xs font-mono text-white rounded-xs uppercase">
-                    Gênero: {filters.gender}
-                    <button onClick={() => handleFilterChange({ ...filters, gender: undefined })} className="text-wolf-400 hover:text-accent">
                       <X className="w-3 h-3" />
                     </button>
                   </span>
@@ -388,7 +368,7 @@ export function CategoryCatalog({
                   onClick={handleReset}
                   className="text-[11px] font-mono text-accent hover:underline uppercase font-bold ml-auto flex items-center gap-1"
                 >
-                  <RotateCcw className="w-3 h-3" /> Limpar Todos
+                  <RotateCcw className="w-3 h-3" /> Limpar Filtros
                 </button>
               </div>
             )}
@@ -397,13 +377,13 @@ export function CategoryCatalog({
             <div className="flex items-center justify-between text-xs font-mono text-wolf-400 pb-2">
               <div className="flex items-center gap-2">
                 <span>
-                  EXIBINDO <strong className="text-white">{loading ? '...' : displayedProducts.length}</strong> PRODUTOS
+                  EXIBINDO <strong className="text-white">{loading ? '...' : displayedProducts.length}</strong> TÊNIS MASCULINOS
                 </span>
                 {loading && <RefreshCw className="w-3.5 h-3.5 text-accent animate-spin" />}
               </div>
             </div>
 
-            {/* PRODUCT GRID OR LOADING / EMPTY STATE */}
+            {/* PRODUCT GRID OR EMPTY STATE */}
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                 {[...Array(6)].map((_, i) => (
@@ -419,8 +399,8 @@ export function CategoryCatalog({
               </div>
             ) : displayedProducts.length === 0 ? (
               <div className="text-center py-24 bg-wolf-900/40 border border-wolf-800 rounded-sm space-y-4 font-mono p-8">
-                <p className="text-base text-wolf-300">Nenhum calçado encontrado com os filtros selecionados.</p>
-                <p className="text-xs text-wolf-500">Tente ajustar a busca por nome ou redefinir os filtros de tamanho e preço.</p>
+                <p className="text-base text-wolf-300">Nenhum tênis masculino encontrado com os filtros selecionados.</p>
+                <p className="text-xs text-wolf-500">Tente ajustar a busca ou limpar os filtros de tamanho e preço.</p>
                 <button
                   onClick={handleReset}
                   className="px-6 py-2.5 bg-accent hover:bg-rose-700 text-white text-xs font-bold uppercase tracking-wider rounded-xs transition-colors inline-block"
@@ -441,7 +421,7 @@ export function CategoryCatalog({
           <div className="w-full max-w-xs sm:max-w-sm bg-wolf-950 border-l border-wolf-800 h-full flex flex-col">
             <div className="p-4 border-b border-wolf-800 flex items-center justify-between">
               <span className="text-xs font-heading font-black uppercase text-white flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-accent" /> FILTROS DO CATÁLOGO
+                <SlidersHorizontal className="w-4 h-4 text-accent" /> FILTROS
               </span>
               <button
                 onClick={() => setIsMobileFiltersOpen(false)}

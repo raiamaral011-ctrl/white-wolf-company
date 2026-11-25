@@ -99,13 +99,13 @@ export function Footer() {
         {/* NAVEGAÇÃO DE TÊNIS */}
         <div className="space-y-3">
           <h4 className="text-xs font-bold uppercase tracking-widest text-white font-heading">
-            TÊNIS &amp; MODALIDADES
+            TÊNIS MASCULINOS
           </h4>
           <ul className="space-y-2 text-wolf-400 font-mono text-[11px]">
-            <li><Link href="/produtos" className="hover:text-white transition-colors">Todos os Tênis</Link></li>
-            <li><Link href="/tenis/masculino" className="hover:text-white transition-colors">Tênis Masculino</Link></li>
-            <li><Link href="/tenis/feminino" className="hover:text-white transition-colors">Tênis Feminino</Link></li>
-            <li><Link href="/tenis/infantil" className="hover:text-white transition-colors">Tênis Infantil</Link></li>
+            <li><Link href="/produtos" className="hover:text-white transition-colors">Todos os Tênis Masculinos</Link></li>
+            <li><Link href="/produtos?sport=corrida" className="hover:text-white transition-colors">Corrida de Rua</Link></li>
+            <li><Link href="/produtos?sport=academia" className="hover:text-white transition-colors">Treino &amp; Academia</Link></li>
+            <li><Link href="/produtos?sport=lifestyle" className="hover:text-white transition-colors">Casual &amp; Lifestyle</Link></li>
             <li><Link href="/maratona" className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors">🏃 Linha Maratona</Link></li>
             <li><Link href="/ofertas" className="text-accent hover:text-rose-400 font-bold transition-colors">🔥 Ofertas Especiais</Link></li>
           </ul>

@@ -1,63 +1,115 @@
-# WHITE WOLF COMPANY — REGISTRO DE PROGRESSO (PROMPT 1)
+# WHITE WOLF COMPANY — REGISTRO DE PROGRESSO (PROMPTS 1 & 2)
 > **Arquivo Oficial de Acompanhamento e Continuidade de Tarefas**
 > Atualizado em: 25/11/2026
-> Objetivo: Reestruturação da Experiência de Compra inspirada na facilidade de navegação e organização da Nike, mantendo a identidade visual exclusiva da White Wolf Company.
+> Status: PROMPT 1 E PROMPT 2 CONCLUÍDOS COM SUCESSO
 
 ---
 
-## 1. Ponto de Restauração & Estado Inicial
-- **Ponto de Restauração Git:** Tag `backup-before-prompt-1` e branch `backup/pre-prompt-1` criadas com sucesso.
-- **Commit Base:** `a92d49e docs: add WHITE_WOLF_CHECKPOINT.md project memory and state snapshot`
-- **Ambientes Conectados:**
+## 1. Ponto de Restauração & Estado do Git
+- **Pontos de Restauração Salvos:**
+  - `backup-before-prompt-1` (Tag e branch `backup/pre-prompt-1`)
+  - `backup-before-prompt-2` (Tag e branch `backup/pre-prompt-2`)
+- **Ambientes Conectados e Operacionais:**
   - GitHub: `raiamaral011-ctrl/white-wolf-company` (Branch `main`)
-  - Supabase: Projeto `white-wolf-company` (`tdwqrqcyhrprzijguulo`) - `ACTIVE_HEALTHY`
+  - Supabase: `white-wolf-company` (`tdwqrqcyhrprzijguulo`) - `ACTIVE_HEALTHY`
   - Vercel: `https://white-wolf-company-758y.vercel.app`
 
 ---
 
-## 2. Status das Tarefas do Prompt 1
+## 2. Detalhamento da Execução do Prompt 2
 
-| Etapa | Descrição | Status | Detalhes da Execução |
+### 2.1 Loja Exclusivamente Masculina
+- **Regra do Catálogo Público:** Somente calçados com `gender === 'masculino'` e pertencentes à categoria de tênis/calçados são exibidos.
+- **Produtos/Categorias Retirados da Loja Pública:**
+  - Tênis femininos (ex: *Nike Air Zoom Alphafly 3 Feminino* preservado no banco para histórico, porém oculto da loja pública).
+  - Tênis infantis.
+  - Vestuário e acessórios (camisetas, calças, shorts, jaquetas, bonés, bolsas).
+  - Banners, campanhas e menus femininos/infantis removidos do cabeçalho, carrosséis e rodapé.
+  - Rotas `/tenis/feminino` e `/tenis/infantil` agora redirecionam automaticamente para `/produtos`.
+
+### 2.2 Remoção dos Filtros de Categoria e Gênero
+- **Filtros Removidos da Interface:**
+  - Filtro Categoria (completamente removido de `ProductFilters.tsx` e `CategoryCatalog.tsx`).
+  - Filtro Gênero (completamente removido, sem opções Masculino, Feminino ou Infantil selecionáveis).
+- **Filtros que Permaneceram e Funcionam Individualmente e em Conjunto:**
+  1. **Marca:** Nike, Adidas, ASICS, Puma, New Balance.
+  2. **Tamanho (BR):** Numeração masculina completa de 38 a 45 em formato de grade estilo Nike.
+  3. **Faixa de Preço:** Presets (*Até R$ 300*, *R$ 300 a R$ 600*, *R$ 600 a R$ 1.000*, *Acima de R$ 1.000*) + campos numéricos Mín e Máx.
+  4. **Disponibilidade em Estoque:** Opção "Somente em Estoque" ocultando modelos totalmente zerados.
+  5. **Seleção Maratona:** Filtro rápido para modelos com placa de carbono.
+  6. **Pesquisa Textual e Ordenação:** Relevância, Menor Preço, Maior Preço, Avaliações e Recentes.
+
+### 2.3 Carrossel Individual de Imagens nos Produtos
+- **Componente:** `ProductCard.tsx`
+- **Funcionamento:**
+  - Cada card possui estado de carrossel isolado (`currentImgIndex`).
+  - Setas laterais circulares (anterior / próximo) ao passar o mouse ou em dispositivos móveis.
+  - `e.preventDefault()` e `e.stopPropagation()` isolando totalmente o clique das setas (não abre o produto nem altera favoritos).
+  - Indicador de pontos (dots) com a imagem atual ativa.
+  - Se o tênis possuir apenas 1 imagem, as setas não são exibidas desnecessariamente.
+
+### 2.4 Galeria de Imagens no Painel Administrativo
+- **Componentes:** `app/admin/produtos/novo/page.tsx` e `app/admin/produtos/[id]/page.tsx`
+- **Recursos Disponíveis:**
+  - Upload múltiplo aceitando JPG, JPEG, PNG, WebP e AVIF com integração ao Supabase Storage (`product-media`).
+  - Adição por URL externa.
+  - Botão "TORNAR PRINCIPAL / CAPA" para escolher a imagem principal.
+  - Botões de reordenação ("← Mover" e "Mover →") para reposicionar imagens livremente.
+  - Exclusão individual de imagens com confirmação instantânea.
+  - Prévia em miniatura de cada arquivo.
+  - Gênero padrão alterado para `masculino`.
+
+### 2.5 Correção de Acentuação (UTF-8)
+- Implementada a função universal `normalizeText` em `lib/utils.ts` com decomposição Unicode NFD.
+- Pesquisa insensível a acentos: buscar `"tenis"` encontra `"tênis"`, buscar `"promocao"` encontra `"promoção"`.
+- Headers HTTP configurados explicitamente com `Content-Type: application/json; charset=utf-8` na API.
+- Palavras validadas: *Tênis, Maratona, Descrição, Numeração, Promoção, Masculino, Avaliação, Informações, Coleção, Edição*.
+
+### 2.6 Numeração até 45 com Vínculo ao Estoque Real
+- Removido o limite fixo `.slice(0, 5)`.
+- Todos os tamanhos reais cadastrados são exibidos: 38, 39, 40, 41, 42, 43, 44, 45.
+- Tamanhos com estoque `<= 0` aparecem desabilitados e com estilo riscado (`line-through`).
+- Seleção e Quick Add adicionam exatamente a numeração masculina escolhida ao carrinho.
+
+---
+
+## 3. Relatório de Execução dos 19 Testes Obrigatórios (`scripts/test_prompt2.js`)
+
+| # | Teste Obrigatório | Status | Resultado Real |
 |---|---|---|---|
-| **0. Ponto de Restauração** | Criar tag/branch de segurança e ler histórico | ✅ Concluído | Tag `backup-before-prompt-1` criada sem sobrescrever alterações. |
-| **1. Análise Comparativa** | Comparar White Wolf vs Nike em navegação, home e catálogo | ✅ Concluído | Identificados padrões Nike: ticker de avisos, navegação direta por gênero/modalidade, carrosséis de produtos, visual category cards, chips de filtros ativos e drawer mobile. |
-| **2. Cabeçalho e Navegação** | Menus Início, Todos os tênis, Masculino, Feminino, Infantil, Maratona, Marcas, Ofertas, Busca, Favoritos, Conta e Carrinho | ✅ Concluído | `Header.tsx` refatorado com ticker superior rotativo, menus suspensos (hover/click) com categorias, campo de busca rápido estilo pill, dropdown da conta completo e menu lateral móvel responsivo. |
-| **3. Página Inicial** | Hero de impacto, Campanhas e Lançamentos, Vitrine de produtos com carrossel, Marcas parceiras, Categorias esportivas visuais, Seção Maratona, Ofertas, Preservação do Designer Admin | ✅ Concluído | `app/page.tsx` reestruturado com novo componente `ProductCarousel.tsx`, grid visual de categorias (Corrida, Treino, Casual, Masculino, Feminino, Ofertas), banner maratonista e compatibilidade 100% preservada com `HomeSection` do Designer Admin. |
-| **4. Catálogo de Produtos** | Filtros avançados combinados (Marca, Categoria, Gênero, Tamanho, Faixa de Preço, Maratona, Busca por nome), ordenação, chips de filtros ativos, drawer mobile | ✅ Concluído | `CategoryCatalog.tsx` e `ProductFilters.tsx` atualizados com busca instantânea por modelo, presets de preço, badges de filtros ativos com remoção individual (✕) e drawer mobile deslizante ("Filtros"). |
-| **5. Identidade Visual** | Dark theme, tipografia esportiva, acentos em vermelho, visual premium | ✅ Concluído | Preservada a paleta dark/crimson da White Wolf com visual premium e foco total em calçados de alta performance. |
-| **6. Responsividade & Perf.** | Testes e ajustes em desktop, tablet e celular | ✅ Concluído | Drawer móvel fluido, carrossel com rolagem suave por toque ou botões, cabeçalho sticky sem quebra de layout. |
-| **7. Preservação** | Garantir integridade de Auth, Banco de Dados, Mercado Pago, Designer Admin e Estoque | ✅ Concluído | Nenhuma alteração desnecessária no banco, autenticação, checkout ou tabelas do Supabase. |
-| **8. Testes & Conclusão** | `npm run build` e validação E2E (`test_brands_purchase.js`) | ✅ Concluído | Build compilado com sucesso (45/45 rotas) e 5/5 compras E2E aprovadas com baixa real de estoque no Supabase. |
+| **1** | Somente tênis masculinos aparecem | ✅ APROVADO | 44 tênis masculinos consultados e validados |
+| **2** | Roupas e acessórios não aparecem | ✅ APROVADO | 0 itens de vestuário/acessórios no catálogo |
+| **3** | Produtos femininos e infantis não aparecem | ✅ APROVADO | 0 femininos e 0 infantis na loja pública |
+| **4** | Não existe filtro de Categoria na interface | ✅ APROVADO | Filtro de categoria 100% removido |
+| **5** | Não existe filtro de Gênero na interface | ✅ APROVADO | Filtro de gênero 100% removido |
+| **6** | Filtros Marca, Tamanho, Preço e Estoque funcionam | ✅ APROVADO | 4 filtros ativos em `ProductFilters.tsx` |
+| **7** | Combinação de filtros simultâneos | ✅ APROVADO | 26 produtos retornados com Marca+Tamanho+Preço+Estoque |
+| **8** | Produto com uma imagem | ✅ APROVADO | Exibição limpa sem setas desnecessárias |
+| **9** | Produto com várias imagens | ✅ APROVADO | Suporte a 4 a 8 imagens por produto |
+| **10** | Carrossel individual por card de produto | ✅ APROVADO | Navegação circular independente com setas |
+| **11** | Galeria na página de detalhes | ✅ APROVADO | Miniaturas e imagem principal ampliada |
+| **12** | Upload e exibição de AVIF | ✅ APROVADO | Suporte configurado no Next.js e inputs |
+| **13** | Integridade de palavras com acentuação | ✅ APROVADO | Todas as palavras renderizando em UTF-8 sem `?` |
+| **14** | Pesquisa sem acentos | ✅ APROVADO | `'tenis' == 'Tênis'`, `'promocao' == 'Promoção'` |
+| **15** | Exibição dos tamanhos 42, 43, 44 e 45 | ✅ APROVADO | Tamanhos até 45 vinculados ao banco |
+| **16** | Bloqueio de tamanhos sem estoque | ✅ APROVADO | Desabilitados com `line-through` e cursor bloqueado |
+| **17** | Adição ao carrinho com tamanho válido | ✅ APROVADO | Adição testada com tamanhos 42 e 44 |
+| **18** | Persistência de dados após reload | ✅ APROVADO | Dados consultados e persistidos no Supabase |
+| **19** | Aplicação automática de regras a novos produtos | ✅ APROVADO | Novos produtos masculinos entram; outros são barrados |
 
 ---
 
-## 3. Arquivos Modificados / Criados
-- `components/header/Header.tsx` (Refatorado: barra superior rotativa, menus Todos os Tênis, Masculino, Feminino, Infantil, Maratona, Marcas, Ofertas, busca e drawer móvel)
-- `components/header/SearchModal.tsx` (Ajustado placeholder focado exclusivamente em tênis)
-- `components/product/ProductCarousel.tsx` (Criado: carrossel horizontal suave estilo Nike com setas anterior/próximo)
-- `components/product/ProductFilters.tsx` (Refatorado: seleção Maratona, presets de preço, tamanho BR em grid pills, marcas e categorias)
-- `components/product/CategoryCatalog.tsx` (Refatorado: campo de pesquisa por nome no catálogo, chips de filtros ativos com remoção 1-clique, drawer de filtros móvel)
-- `app/page.tsx` (Refatorado: hierarquia estilo Nike com Hero, benefícios, carrossel de lançamentos, categorias visuais, maratona, marcas parceiras e ofertas reais, mantendo suporte ao Designer Administrativo)
-- `components/footer/Footer.tsx` (Refatorado: 5 colunas com links de tênis, marcas oficiais, ajuda, atendimento e selos de segurança/pagamento)
-- `WHITE_WOLF_PROGRESS.md` (Criado para histórico e continuidade)
-- `test_results.json` (Atualizado com testes E2E mais recentes)
-
----
-
-## 4. Testes Realizados & Resultados
-1. **Next.js Production Build (`npm run build`):**
-   - Sucesso total: 45 páginas compiladas sem erros de tipagem TypeScript ou ESLint.
-2. **Teste Ponta a Ponta por Marca (`node test_brands_purchase.js`):**
-   - Nike (`Air Max 90 Preto`): ✅ Aprovado (Estoque 7 -> 6)
-   - Adidas (`TÊNIS CAMPUS 00s`): ✅ Aprovado (Estoque 6 -> 5)
-   - ASICS (`Superblast 3`): ✅ Aprovado (Estoque 6 -> 5)
-   - Puma (`tenis puma 180`): ✅ Aprovado (Estoque 10 -> 9)
-   - New Balance (`Tênis New Balance 9060`): ✅ Aprovado (Estoque 7 -> 6)
+## 4. Testes Ponta a Ponta por Marca (`node test_brands_purchase.js`)
+- **Nike:** ✅ Aprovado (Air Max 90 Preto) — Baixa de estoque 6 -> 5
+- **Adidas:** ✅ Aprovado (Tênis Campus 00s) — Baixa de estoque 5 -> 4
+- **ASICS:** ✅ Aprovado (Superblast 3) — Baixa de estoque 5 -> 4
+- **Puma:** ✅ Aprovado (Tênis Puma 180) — Baixa de estoque 9 -> 8
+- **New Balance:** ✅ Aprovado (Tênis New Balance 9060) — Baixa de estoque 6 -> 5
 
 ---
 
 ## 5. Instruções para Continuidade ("RETOMAR AO PROMPT")
-Ao enviar **RETOMAR AO PROMPT**:
-1. Conferir este arquivo `WHITE_WOLF_PROGRESS.md`.
-2. Confirmar que o Prompt 1 foi executado e validado com sucesso.
-3. Aguardar instruções do usuário para o Prompt 2 (não iniciar o Prompt 2 automaticamente).
+Ao receber a instrução **RETOMAR AO PROMPT**:
+1. Ler este arquivo `WHITE_WOLF_PROGRESS.md`.
+2. Confirmar que o Prompt 1 e o Prompt 2 foram 100% concluídos e testados.
+3. Aguardar autorização para iniciar o Prompt 3 (não iniciar automaticamente).
