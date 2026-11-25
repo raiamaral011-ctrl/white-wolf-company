@@ -66,6 +66,28 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       }
     }
 
+    // Attach product images to items
+    const pIds = (order.items || []).map((i: any) => i.product_id).filter(Boolean);
+    if (pIds.length > 0) {
+      const { data: images } = await supabase
+        .from('product_images')
+        .select('product_id, url')
+        .in('product_id', pIds)
+        .order('sort_order', { ascending: true });
+
+      const imgMap = new Map<string, string>();
+      (images || []).forEach((img: any) => {
+        if (!imgMap.has(img.product_id)) {
+          imgMap.set(img.product_id, img.url);
+        }
+      });
+
+      order.items = order.items.map((item: any) => ({
+        ...item,
+        image_url: imgMap.get(item.product_id) || null,
+      }));
+    }
+
     return NextResponse.json({ order });
   } catch (err: any) {
     return NextResponse.json({ error: 'Erro ao buscar pedido: ' + err.message }, { status: 500 });

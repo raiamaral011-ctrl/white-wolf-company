@@ -7,7 +7,7 @@ import { Header } from '@/components/header/Header';
 import { Footer } from '@/components/footer/Footer';
 import { createClient } from '@/lib/supabase/browser';
 import { registerSchema } from '@/lib/validation/schemas';
-import { UserPlus, ArrowRight, AlertCircle } from 'lucide-react';
+import { UserPlus, ArrowRight, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
 
 export default function CadastroPage() {
   const router = useRouter();
@@ -22,15 +22,26 @@ export default function CadastroPage() {
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg('');
+    setSuccessMsg('');
 
     try {
+      const cleanData = {
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        cpf: formData.cpf.trim(),
+        phone: formData.phone.trim(),
+      };
+
       // Validate schema
-      const validated = registerSchema.parse(formData);
+      const validated = registerSchema.parse(cleanData);
 
       const supabase = createClient();
       const { data, error } = await supabase.auth.signUp({
@@ -39,21 +50,47 @@ export default function CadastroPage() {
         options: {
           data: {
             full_name: validated.fullName,
-            cpf: validated.cpf,
-            phone: validated.phone,
+            cpf: validated.cpf || null,
+            phone: validated.phone || null,
+            role: 'customer', // strictly enforce customer role
           },
         },
       });
 
       if (error) {
-        throw new Error(error.message);
+        let msg = error.message;
+        if (
+          error.message.includes('User already registered') ||
+          (error as any).code === 'user_already_exists'
+        ) {
+          msg = 'Este e-mail já está cadastrado. Faça login para continuar.';
+        } else if (error.message.includes('Password should be at least 6 characters')) {
+          msg = 'A senha deve conter no mínimo 6 caracteres.';
+        } else if (error.message.includes('valid email')) {
+          msg = 'Por favor, informe um endereço de e-mail válido.';
+        }
+        throw new Error(msg);
       }
 
-      router.push('/minha-conta');
-      router.refresh();
+      // Check if user session was returned or sign in explicitly
+      if (!data.session) {
+        const { error: signInErr } = await supabase.auth.signInWithPassword({
+          email: validated.email,
+          password: validated.password,
+        });
+        if (signInErr) {
+          console.warn('Auto sign-in notice:', signInErr.message);
+        }
+      }
+
+      setSuccessMsg('Conta criada com sucesso! Redirecionando para a sua área...');
+
+      setTimeout(() => {
+        window.location.href = '/minha-conta';
+      }, 1000);
+
     } catch (err: any) {
       setErrorMsg(err?.errors?.[0]?.message || err.message || 'Erro ao realizar cadastro.');
-    } finally {
       setLoading(false);
     }
   };
@@ -72,7 +109,7 @@ export default function CadastroPage() {
               CRIAR SUA CONTA
             </h1>
             <p className="text-xs text-wolf-400">
-              Junte-se à comunidade White Wolf Company e aproveite ofertas exclusivas.
+              Junte-se à comunidade White Wolf Company e aproveite uma experiência de compra exclusiva.
             </p>
           </div>
 
@@ -80,6 +117,13 @@ export default function CadastroPage() {
             <div className="p-3 bg-rose-950/80 border border-rose-800 text-rose-200 text-xs font-mono flex items-center gap-2 rounded-xs">
               <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
               <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {successMsg && (
+            <div className="p-3 bg-emerald-950/80 border border-emerald-800 text-emerald-200 text-xs font-mono flex items-center gap-2 rounded-xs">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{successMsg}</span>
             </div>
           )}
 
@@ -92,7 +136,8 @@ export default function CadastroPage() {
                 value={formData.fullName}
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                 placeholder="Seu nome completo"
-                className="w-full bg-wolf-950 border border-wolf-800 px-3 py-2 text-xs text-white placeholder-wolf-500 focus:outline-none focus:border-accent"
+                disabled={loading || !!successMsg}
+                className="w-full bg-wolf-950 border border-wolf-800 px-3 py-2 text-xs text-white placeholder-wolf-500 focus:outline-none focus:border-accent disabled:opacity-50"
               />
             </div>
 
@@ -104,7 +149,8 @@ export default function CadastroPage() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="seuemail@exemplo.com"
-                className="w-full bg-wolf-950 border border-wolf-800 px-3 py-2 text-xs text-white placeholder-wolf-500 focus:outline-none focus:border-accent"
+                disabled={loading || !!successMsg}
+                className="w-full bg-wolf-950 border border-wolf-800 px-3 py-2 text-xs text-white placeholder-wolf-500 focus:outline-none focus:border-accent disabled:opacity-50"
               />
             </div>
 
@@ -117,7 +163,8 @@ export default function CadastroPage() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="Mínimo 6 caracteres"
-                  className="w-full bg-wolf-950 border border-wolf-800 px-3 py-2 text-xs text-white placeholder-wolf-500 focus:outline-none focus:border-accent"
+                  disabled={loading || !!successMsg}
+                  className="w-full bg-wolf-950 border border-wolf-800 px-3 py-2 text-xs text-white placeholder-wolf-500 focus:outline-none focus:border-accent disabled:opacity-50"
                 />
               </div>
               <div>
@@ -128,7 +175,8 @@ export default function CadastroPage() {
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   placeholder="Repita sua senha"
-                  className="w-full bg-wolf-950 border border-wolf-800 px-3 py-2 text-xs text-white placeholder-wolf-500 focus:outline-none focus:border-accent"
+                  disabled={loading || !!successMsg}
+                  className="w-full bg-wolf-950 border border-wolf-800 px-3 py-2 text-xs text-white placeholder-wolf-500 focus:outline-none focus:border-accent disabled:opacity-50"
                 />
               </div>
             </div>
@@ -141,7 +189,8 @@ export default function CadastroPage() {
                   value={formData.cpf}
                   onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
                   placeholder="000.000.000-00"
-                  className="w-full bg-wolf-950 border border-wolf-800 px-3 py-2 text-xs text-white placeholder-wolf-500 focus:outline-none focus:border-accent"
+                  disabled={loading || !!successMsg}
+                  className="w-full bg-wolf-950 border border-wolf-800 px-3 py-2 text-xs text-white placeholder-wolf-500 focus:outline-none focus:border-accent disabled:opacity-50"
                 />
               </div>
               <div>
@@ -151,18 +200,33 @@ export default function CadastroPage() {
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="(11) 99999-9999"
-                  className="w-full bg-wolf-950 border border-wolf-800 px-3 py-2 text-xs text-white placeholder-wolf-500 focus:outline-none focus:border-accent"
+                  disabled={loading || !!successMsg}
+                  className="w-full bg-wolf-950 border border-wolf-800 px-3 py-2 text-xs text-white placeholder-wolf-500 focus:outline-none focus:border-accent disabled:opacity-50"
                 />
               </div>
             </div>
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !!successMsg}
               className="w-full py-3.5 bg-accent hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-colors disabled:opacity-50 mt-2"
             >
-              {loading ? 'CRIANDO CONTA...' : 'FINALIZAR CADASTRO'}
-              <ArrowRight className="w-4 h-4" />
+              {loading ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  CRIANDO CONTA...
+                </>
+              ) : successMsg ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  CONTA CRIADA!
+                </>
+              ) : (
+                <>
+                  FINALIZAR CADASTRO
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </form>
 

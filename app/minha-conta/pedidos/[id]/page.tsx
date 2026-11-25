@@ -104,12 +104,23 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
               </h3>
               <div className="divide-y divide-wolf-800 border-t border-b border-wolf-800">
                 {items.map((item: any, idx: number) => (
-                  <div key={idx} className="py-4 flex justify-between items-center text-xs font-mono">
-                    <div>
-                      <span className="text-white font-bold block">{item.product_name}</span>
-                      <span className="text-wolf-400">SKU: {item.product_sku} • Tamanho: {item.size} • Cor: {item.color} • Qtd: {item.quantity}</span>
+                  <div key={idx} className="py-4 flex justify-between items-center text-xs font-mono gap-3">
+                    <div className="flex items-center gap-3">
+                      {item.image_url && (
+                        <div className="w-14 h-14 bg-wolf-950 border border-wolf-800 rounded-xs overflow-hidden shrink-0 flex items-center justify-center p-1">
+                          <img
+                            src={item.image_url}
+                            alt={item.product_name}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-white font-bold block text-sm">{item.product_name}</span>
+                        <span className="text-wolf-400">SKU: {item.product_sku} • Tamanho: {item.size} • Cor: {item.color} • Qtd: {item.quantity}</span>
+                      </div>
                     </div>
-                    <span className="text-white font-bold text-sm">{formatCurrency(item.subtotal || item.unit_price * item.quantity)}</span>
+                    <span className="text-white font-bold text-sm shrink-0">{formatCurrency(item.subtotal || item.unit_price * item.quantity)}</span>
                   </div>
                 ))}
               </div>

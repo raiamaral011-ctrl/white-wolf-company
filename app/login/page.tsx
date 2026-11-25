@@ -38,7 +38,13 @@ function LoginForm() {
       });
 
       if (error || !data.user) {
-        throw new Error(error?.message || 'Credenciais inválidas.');
+        let msg = error?.message || 'Credenciais inválidas.';
+        if (msg.includes('Invalid login credentials')) {
+          msg = 'E-mail ou senha incorretos. Verifique suas credenciais.';
+        } else if (msg.includes('Email not confirmed')) {
+          msg = 'E-mail não confirmado. Verifique sua caixa de entrada.';
+        }
+        throw new Error(msg);
       }
 
       // Check role in profiles

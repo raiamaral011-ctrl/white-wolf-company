@@ -122,12 +122,23 @@ export default function MeusPedidosPage() {
 
                 <div className="space-y-3">
                   {items.map((item: any, idx: number) => (
-                    <div key={idx} className="flex justify-between items-center text-xs font-mono text-wolf-300">
-                      <div>
-                        <span className="text-white font-bold block">{item.product_name}</span>
-                        <span className="text-wolf-400">SKU: {item.product_sku} • Tamanho: {item.size} • Cor: {item.color} • Qtd: {item.quantity}</span>
+                    <div key={idx} className="flex justify-between items-center text-xs font-mono text-wolf-300 gap-3">
+                      <div className="flex items-center gap-3">
+                        {item.image_url && (
+                          <div className="w-12 h-12 bg-wolf-950 border border-wolf-800 rounded-xs overflow-hidden shrink-0 flex items-center justify-center p-1">
+                            <img
+                              src={item.image_url}
+                              alt={item.product_name}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-white font-bold block">{item.product_name}</span>
+                          <span className="text-wolf-400">SKU: {item.product_sku} • Tamanho: {item.size} • Cor: {item.color} • Qtd: {item.quantity}</span>
+                        </div>
                       </div>
-                      <span className="text-white font-bold">{formatCurrency((item.unit_price || 0) * (item.quantity || 1))}</span>
+                      <span className="text-white font-bold shrink-0">{formatCurrency((item.unit_price || 0) * (item.quantity || 1))}</span>
                     </div>
                   ))}
                 </div>

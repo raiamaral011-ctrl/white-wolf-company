@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/header/Header';
 import { Footer } from '@/components/footer/Footer';
 import { useCart } from '@/context/cart-context';
+import { createClient } from '@/lib/supabase/browser';
 import { formatCurrency } from '@/lib/utils';
 import { ShieldCheck, ArrowRight, Check, CreditCard, QrCode, Copy, CheckCircle2, Lock, AlertCircle } from 'lucide-react';
 
@@ -16,6 +17,35 @@ export default function CheckoutPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [copiedPix, setCopiedPix] = useState(false);
   const [createdOrder, setCreatedOrder] = useState<any>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function checkUser() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserId(user.id);
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, email, cpf, phone')
+            .eq('user_id', user.id)
+            .single();
+
+          setFormData((prev) => ({
+            ...prev,
+            fullName: profile?.full_name || user.user_metadata?.full_name || prev.fullName,
+            email: user.email || profile?.email || prev.email,
+            cpf: profile?.cpf || user.user_metadata?.cpf || prev.cpf,
+            phone: profile?.phone || user.user_metadata?.phone || prev.phone,
+          }));
+        }
+      } catch (err) {
+        console.error('Error auto-filling user profile in checkout:', err);
+      }
+    }
+    checkUser();
+  }, []);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -61,6 +91,7 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId,
           checkoutData: {
             fullName: formData.fullName,
             email: formData.email,

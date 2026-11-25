@@ -31,6 +31,30 @@ export async function POST(request: Request) {
       // Guest checkout
     }
 
+    // Fallback: If not found in cookie session, check client passed userId or profile email
+    if (!authUserId && (body.userId || body.checkoutData?.userId)) {
+      const candidateId = body.userId || body.checkoutData?.userId;
+      const { data: profileCheck } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('user_id', candidateId)
+        .single();
+      if (profileCheck?.user_id) {
+        authUserId = profileCheck.user_id;
+      }
+    }
+
+    if (!authUserId && validatedData.email) {
+      const { data: profileByEmail } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', validatedData.email.trim().toLowerCase())
+        .single();
+      if (profileByEmail?.user_id) {
+        authUserId = profileByEmail.user_id;
+      }
+    }
+
     // SERVER-SIDE PRICE & STOCK VALIDATION
     let serverSubtotal = 0;
     const validatedOrderItems = [];

@@ -67,6 +67,36 @@ export async function GET(req: Request) {
       (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
     );
 
+    // Collect all product IDs to attach images
+    const allProductIds = new Set<string>();
+    combined.forEach((ord: any) => {
+      (ord.items || []).forEach((it: any) => {
+        if (it.product_id) allProductIds.add(it.product_id);
+      });
+    });
+
+    if (allProductIds.size > 0) {
+      const { data: images } = await supabase
+        .from('product_images')
+        .select('product_id, url')
+        .in('product_id', Array.from(allProductIds))
+        .order('sort_order', { ascending: true });
+
+      const imgMap = new Map<string, string>();
+      (images || []).forEach((img: any) => {
+        if (!imgMap.has(img.product_id)) {
+          imgMap.set(img.product_id, img.url);
+        }
+      });
+
+      combined.forEach((ord: any) => {
+        ord.items = (ord.items || []).map((it: any) => ({
+          ...it,
+          image_url: imgMap.get(it.product_id) || null,
+        }));
+      });
+    }
+
     return NextResponse.json({ orders: combined });
   } catch (err: any) {
     console.error('User orders API error:', err);

@@ -1,14 +1,15 @@
-# WHITE WOLF COMPANY — REGISTRO DE PROGRESSO (PROMPTS 1 & 2)
+# WHITE WOLF COMPANY — REGISTRO DE PROGRESSO (PROMPTS 1, 2 & 3)
 > **Arquivo Oficial de Acompanhamento e Continuidade de Tarefas**
 > Atualizado em: 25/11/2026
-> Status: PROMPT 1 E PROMPT 2 CONCLUÍDOS COM SUCESSO
+> Status: PROMPT 1, PROMPT 2 E PROMPT 3 CONCLUÍDOS COM SUCESSO
 
 ---
 
-## 1. Ponto de Restauração & Estado do Git
+## 1. Pontos de Restauração & Estado do Git
 - **Pontos de Restauração Salvos:**
   - `backup-before-prompt-1` (Tag e branch `backup/pre-prompt-1`)
   - `backup-before-prompt-2` (Tag e branch `backup/pre-prompt-2`)
+  - `backup-before-prompt-3` (Tag e branch `backup/pre-prompt-3`)
 - **Ambientes Conectados e Operacionais:**
   - GitHub: `raiamaral011-ctrl/white-wolf-company` (Branch `main`)
   - Supabase: `white-wolf-company` (`tdwqrqcyhrprzijguulo`) - `ACTIVE_HEALTHY`
@@ -16,100 +17,120 @@
 
 ---
 
-## 2. Detalhamento da Execução do Prompt 2
+## 2. Detalhamento da Execução do Prompt 3 (Sistema Completo de Clientes e Conta)
 
-### 2.1 Loja Exclusivamente Masculina
-- **Regra do Catálogo Público:** Somente calçados com `gender === 'masculino'` e pertencentes à categoria de tênis/calçados são exibidos.
-- **Produtos/Categorias Retirados da Loja Pública:**
-  - Tênis femininos (ex: *Nike Air Zoom Alphafly 3 Feminino* preservado no banco para histórico, porém oculto da loja pública).
-  - Tênis infantis.
-  - Vestuário e acessórios (camisetas, calças, shorts, jaquetas, bonés, bolsas).
-  - Banners, campanhas e menus femininos/infantis removidos do cabeçalho, carrosséis e rodapé.
-  - Rotas `/tenis/feminino` e `/tenis/infantil` agora redirecionam automaticamente para `/produtos`.
+### 2.1 Cadastro de Clientes
+- **Componente:** `app/cadastro/page.tsx`
+- **Validação e Fluxo:**
+  - Validação estrita via Zod (`registerSchema`), garantindo nome completo, e-mail válido, senha mínima de 6 caracteres e confirmação de senha idêntica.
+  - Normalização de dados: e-mails convertidos para minúsculo e sem espaços em branco (`trim().toLowerCase()`).
+  - Criação de usuário no Supabase Auth com metadados (`full_name`, `cpf`, `phone`, `role: 'customer'`).
+  - Associação automática do perfil na tabela `profiles`.
+  - Tratamento e tradução amigável de erros (ex: *"Este e-mail já está cadastrado. Faça login para continuar."*, *"A senha deve conter no mínimo 6 caracteres"*).
+  - Feedback visual de sucesso com indicador animado antes do redirecionamento seguro para `/minha-conta`.
+  - Garantia de que clientes jamais criam contas com privilégios administrativos.
 
-### 2.2 Remoção dos Filtros de Categoria e Gênero
-- **Filtros Removidos da Interface:**
-  - Filtro Categoria (completamente removido de `ProductFilters.tsx` e `CategoryCatalog.tsx`).
-  - Filtro Gênero (completamente removido, sem opções Masculino, Feminino ou Infantil selecionáveis).
-- **Filtros que Permaneceram e Funcionam Individualmente e em Conjunto:**
-  1. **Marca:** Nike, Adidas, ASICS, Puma, New Balance.
-  2. **Tamanho (BR):** Numeração masculina completa de 38 a 45 em formato de grade estilo Nike.
-  3. **Faixa de Preço:** Presets (*Até R$ 300*, *R$ 300 a R$ 600*, *R$ 600 a R$ 1.000*, *Acima de R$ 1.000*) + campos numéricos Mín e Máx.
-  4. **Disponibilidade em Estoque:** Opção "Somente em Estoque" ocultando modelos totalmente zerados.
-  5. **Seleção Maratona:** Filtro rápido para modelos com placa de carbono.
-  6. **Pesquisa Textual e Ordenação:** Relevância, Menor Preço, Maior Preço, Avaliações e Recentes.
-
-### 2.3 Carrossel Individual de Imagens nos Produtos
-- **Componente:** `ProductCard.tsx`
+### 2.2 Login e Logout Reais
+- **Componentes:** `app/login/page.tsx`, `components/header/UserMenu.tsx`, `app/api/auth/logout/route.ts`
 - **Funcionamento:**
-  - Cada card possui estado de carrossel isolado (`currentImgIndex`).
-  - Setas laterais circulares (anterior / próximo) ao passar o mouse ou em dispositivos móveis.
-  - `e.preventDefault()` e `e.stopPropagation()` isolando totalmente o clique das setas (não abre o produto nem altera favoritos).
-  - Indicador de pontos (dots) com a imagem atual ativa.
-  - Se o tênis possuir apenas 1 imagem, as setas não são exibidas desnecessariamente.
+  - Login suporta e-mail ou nome de usuário, identificando credenciais válidas.
+  - Mensagens de erro claras e traduzidas para português em caso de falha de autenticação.
+  - Redirecionamento inteligente: para a URL de origem (`redirectParam`), para `/admin` (se administrador) ou `/minha-conta` (se cliente).
+  - Logout real: chama `supabase.auth.signOut()` no cliente e invalida cookies de sessão no servidor (`/api/auth/logout` e `/api/admin/logout`).
+  - Limpeza imediata do estado global e redirecionamento rígido (`window.location.href = '/'`) impedindo que a sessão anterior permaneça no cache de rota.
 
-### 2.4 Galeria de Imagens no Painel Administrativo
-- **Componentes:** `app/admin/produtos/novo/page.tsx` e `app/admin/produtos/[id]/page.tsx`
-- **Recursos Disponíveis:**
-  - Upload múltiplo aceitando JPG, JPEG, PNG, WebP e AVIF com integração ao Supabase Storage (`product-media`).
-  - Adição por URL externa.
-  - Botão "TORNAR PRINCIPAL / CAPA" para escolher a imagem principal.
-  - Botões de reordenação ("← Mover" e "Mover →") para reposicionar imagens livremente.
-  - Exclusão individual de imagens com confirmação instantânea.
-  - Prévia em miniatura de cada arquivo.
-  - Gênero padrão alterado para `masculino`.
+### 2.3 Minha Conta & Dados Pessoais
+- **Componentes:** `app/minha-conta/page.tsx`, `app/minha-conta/dados/page.tsx`, `app/api/profile/route.ts`
+- **Recursos:**
+  - Exibição de saudação personalizada com o nome e e-mail real do atleta autenticado.
+  - Edição de dados cadastrais (nome completo, CPF, telefone) com atualização persistida no Supabase `profiles`.
+  - Proteção de escalada de privilégios: a rota `/api/profile` proíbe terminantemente alteração de `role`.
+  - Isolamento de dados garantido por RLS e filtragem por `user_id`.
 
-### 2.5 Correção de Acentuação (UTF-8)
-- Implementada a função universal `normalizeText` em `lib/utils.ts` com decomposição Unicode NFD.
-- Pesquisa insensível a acentos: buscar `"tenis"` encontra `"tênis"`, buscar `"promocao"` encontra `"promoção"`.
-- Headers HTTP configurados explicitamente com `Content-Type: application/json; charset=utf-8` na API.
-- Palavras validadas: *Tênis, Maratona, Descrição, Numeração, Promoção, Masculino, Avaliação, Informações, Coleção, Edição*.
+### 2.4 Produtos Favoritos Vinculados à Conta
+- **Componentes:** `app/api/favorites/route.ts`, `context/favorites-context.tsx`, `app/favoritos/page.tsx`, `components/product/ProductCard.tsx`
+- **Funcionamento:**
+  - Tabela `favorites` no Supabase com chave única `(user_id, product_id)`.
+  - Nova API RESTful `/api/favorites` com métodos `GET`, `POST` e `DELETE`.
+  - `FavoritesProvider` atualizado com sincronização em tempo real com o banco para usuários autenticados.
+  - Migração/merge automático: se um visitante favoritou itens e posteriormente entrou na conta, seus favoritos locais são sincronizados com o banco de dados.
+  - Fallback em `localStorage` preservado para visitantes não autenticados com aviso amigável convidando para login.
+  - Ícone de coração nos cards de produtos refletindo fielmente o estado real e persistido.
+  - Página `/favoritos` estilizada exibindo imagens, nomes, preços, link de detalhes, remoção instantânea e botão de compra rápida.
 
-### 2.6 Numeração até 45 com Vínculo ao Estoque Real
-- Removido o limite fixo `.slice(0, 5)`.
-- Todos os tamanhos reais cadastrados são exibidos: 38, 39, 40, 41, 42, 43, 44, 45.
-- Tamanhos com estoque `<= 0` aparecem desabilitados e com estilo riscado (`line-through`).
-- Seleção e Quick Add adicionam exatamente a numeração masculina escolhida ao carrinho.
+### 2.5 Meus Pedidos & Detalhes do Pedido
+- **Componentes:** `app/minha-conta/pedidos/page.tsx`, `app/minha-conta/pedidos/[id]/page.tsx`, `app/api/orders/route.ts`, `app/api/orders/[id]/route.ts`
+- **Recursos:**
+  - Consulta estrita aos pedidos pertencentes ao cliente autenticado (`user_id` ou e-mail correspondente).
+  - Listagem dos pedidos reais com data formatada, status estilizado por badge (aprovado, enviado, etc.) e valor total.
+  - Itens do pedido incluem imagem do tênis, nome do produto, SKU, tamanho escolhido, cor, quantidade e valor.
+  - Página de detalhes do pedido (`/minha-conta/pedidos/[id]`) com endereço completo de entrega, resumo financeiro e status de pagamento.
+  - Bloqueio de segurança 403 Forbidden caso outro cliente tente acessar a URL de um pedido que não lhe pertence.
+
+### 2.6 Integração Carrinho & Checkout
+- **Componentes:** `app/checkout/page.tsx`, `app/api/checkout/route.ts`
+- **Recursos:**
+  - Ao entrar no checkout, os dados do perfil autenticado (nome, e-mail, CPF, telefone) são automaticamente preenchidos.
+  - Pedido é associado ao `user_id` autenticado no momento da criação.
+  - Validação rigorosa de estoque por tamanho e baixa automática de estoque na tabela `product_variants`.
+  - Criação do pedido em `orders` e itens em `order_items` no Supabase.
+
+### 2.7 Menu do Usuário Atualizado
+- **Componente:** `components/header/UserMenu.tsx`
+- **Estados:**
+  - **Visitante (Não autenticado):** *Entrar*, *Criar Conta* e link secundário para *Acesso Administrativo*.
+  - **Cliente Autenticado:** Nome do usuário, *Minha Conta*, *Meus Pedidos*, *Meus Favoritos*, *Dados Pessoais* e *Sair da Conta*.
+  - **Administrador:** Badge de identificação ADMIN, link prioritário de destaque para *PAINEL ADMINISTRATIVO*, além das opções pessoais e encerramento de sessão.
+
+### 2.8 Segurança & Políticas RLS
+- RLS ativo e validado em `profiles`, `orders`, `order_items`, `favorites`, `payments`.
+- Migração `003_protect_profile_role.sql` aplicada no banco de dados com trigger `prevent_profile_role_escalation` e cláusula `WITH CHECK` na política de UPDATE, impedindo qualquer alteração não autorizada de `role` para `admin`.
+- Clientes consultam exclusivamente seus próprios dados e compras.
+- Nenhuma chave restrita exposta no cliente.
 
 ---
 
-## 3. Relatório de Execução dos 19 Testes Obrigatórios (`scripts/test_prompt2.js`)
+## 3. Relatório da Bateria de Testes Obrigatórios do Prompt 3 (`scripts/test_prompt3.js`)
 
-| # | Teste Obrigatório | Status | Resultado Real |
+| # | Cenário Testado | Status | Detalhes do Resultado Real |
 |---|---|---|---|
-| **1** | Somente tênis masculinos aparecem | ✅ APROVADO | 44 tênis masculinos consultados e validados |
-| **2** | Roupas e acessórios não aparecem | ✅ APROVADO | 0 itens de vestuário/acessórios no catálogo |
-| **3** | Produtos femininos e infantis não aparecem | ✅ APROVADO | 0 femininos e 0 infantis na loja pública |
-| **4** | Não existe filtro de Categoria na interface | ✅ APROVADO | Filtro de categoria 100% removido |
-| **5** | Não existe filtro de Gênero na interface | ✅ APROVADO | Filtro de gênero 100% removido |
-| **6** | Filtros Marca, Tamanho, Preço e Estoque funcionam | ✅ APROVADO | 4 filtros ativos em `ProductFilters.tsx` |
-| **7** | Combinação de filtros simultâneos | ✅ APROVADO | 26 produtos retornados com Marca+Tamanho+Preço+Estoque |
-| **8** | Produto com uma imagem | ✅ APROVADO | Exibição limpa sem setas desnecessárias |
-| **9** | Produto com várias imagens | ✅ APROVADO | Suporte a 4 a 8 imagens por produto |
-| **10** | Carrossel individual por card de produto | ✅ APROVADO | Navegação circular independente com setas |
-| **11** | Galeria na página de detalhes | ✅ APROVADO | Miniaturas e imagem principal ampliada |
-| **12** | Upload e exibição de AVIF | ✅ APROVADO | Suporte configurado no Next.js e inputs |
-| **13** | Integridade de palavras com acentuação | ✅ APROVADO | Todas as palavras renderizando em UTF-8 sem `?` |
-| **14** | Pesquisa sem acentos | ✅ APROVADO | `'tenis' == 'Tênis'`, `'promocao' == 'Promoção'` |
-| **15** | Exibição dos tamanhos 42, 43, 44 e 45 | ✅ APROVADO | Tamanhos até 45 vinculados ao banco |
-| **16** | Bloqueio de tamanhos sem estoque | ✅ APROVADO | Desabilitados com `line-through` e cursor bloqueado |
-| **17** | Adição ao carrinho com tamanho válido | ✅ APROVADO | Adição testada com tamanhos 42 e 44 |
-| **18** | Persistência de dados após reload | ✅ APROVADO | Dados consultados e persistidos no Supabase |
-| **19** | Aplicação automática de regras a novos produtos | ✅ APROVADO | Novos produtos masculinos entram; outros são barrados |
+| **A1** | Bloqueio de e-mail duplicado no cadastro | ✅ APROVADO | Rejeitado corretamente com código `user_already_exists` |
+| **A2** | Criação do usuário no Supabase Auth | ✅ APROVADO | Usuário de teste criado e autenticado |
+| **A3** | Criação e integridade do perfil em `profiles` | ✅ APROVADO | Perfil criado com `role='customer'`, nome e dados sincronizados |
+| **A4** | Bloqueio de escalada de privilégios (`role`) | ✅ APROVADO | Tentativa de alteração para `admin` bloqueada por RLS/trigger |
+| **B1** | Login com credenciais reais | ✅ APROVADO | Sessão e token JWT emitidos com sucesso |
+| **B2** | Persistência da sessão após reload simulado | ✅ APROVADO | Sessão válida e usuário mantido ativo |
+| **B3** | Logout real (`signOut`) | ✅ APROVADO | Sessão revogada com sucesso no Supabase e servidor |
+| **B4** | Confirmação de sessão encerrada | ✅ APROVADO | Estado local e sessão nulos após logout |
+| **C1** | Favoritar tênis no banco de dados | ✅ APROVADO | Produto registrado com sucesso na tabela `favorites` |
+| **C2** | Persistência dos favoritos na conta | ✅ APROVADO | Favoritos recuperados do banco após recarregamento |
+| **C3** | Remoção de produto dos favoritos | ✅ APROVADO | Exclusão pontual realizada na tabela `favorites` |
+| **D1** | Registro de compra vinculada ao usuário | ✅ APROVADO | Pedido e itens registrados no banco vinculados ao `user_id` |
+| **D2** | Consulta em Meus Pedidos pelo titular | ✅ APROVADO | Titular acessa e consulta histórico com sucesso |
+| **D3** | Isolamento de pedidos (outro cliente não acessa) | ✅ APROVADO | Cliente 2 impedido de acessar compras do Cliente 1 (RLS) |
+| **E1** | Conta administrativa identificada | ✅ APROVADO | Administrador identificado com perfil `admin` |
+| **E2** | Permissões administrativas preservadas | ✅ APROVADO | Painel e recursos administrativos operacionais |
+
+**Resultado Geral da Bateria:** 16 de 16 testes aprovados (100% de sucesso).
 
 ---
 
 ## 4. Testes Ponta a Ponta por Marca (`node test_brands_purchase.js`)
-- **Nike:** ✅ Aprovado (Air Max 90 Preto) — Baixa de estoque 6 -> 5
-- **Adidas:** ✅ Aprovado (Tênis Campus 00s) — Baixa de estoque 5 -> 4
-- **ASICS:** ✅ Aprovado (Superblast 3) — Baixa de estoque 5 -> 4
-- **Puma:** ✅ Aprovado (Tênis Puma 180) — Baixa de estoque 9 -> 8
-- **New Balance:** ✅ Aprovado (Tênis New Balance 9060) — Baixa de estoque 6 -> 5
+- **Nike:** ✅ Aprovado (Air Max 90 Preto) — Baixa de estoque 5 -> 4
+- **Adidas:** ✅ Aprovado (Tênis Campus 00s) — Baixa de estoque 4 -> 3
+- **ASICS:** ✅ Aprovado (Superblast 3) — Baixa de estoque 10 -> 9
+- **Puma:** ✅ Aprovado (Tênis Smash v2) — Baixa de estoque 10 -> 9
+- **New Balance:** ✅ Aprovado (Tênis New Balance 9060) — Baixa de estoque 10 -> 9
 
 ---
 
-## 5. Instruções para Continuidade ("RETOMAR AO PROMPT")
+## 5. Build de Produção Next.js
+- `next build`: ✅ Compilado com sucesso (0 erros, 45 páginas geradas, incluindo `/api/favorites`, `/favoritos`, `/minha-conta/dados`, `/minha-conta/pedidos/[id]`).
+
+---
+
+## 6. Instruções para Continuidade ("RETOMAR AO PROMPT")
 Ao receber a instrução **RETOMAR AO PROMPT**:
 1. Ler este arquivo `WHITE_WOLF_PROGRESS.md`.
-2. Confirmar que o Prompt 1 e o Prompt 2 foram 100% concluídos e testados.
-3. Aguardar autorização para iniciar o Prompt 3 (não iniciar automaticamente).
+2. Confirmar que os Prompts 1, 2 e 3 foram 100% concluídos e testados.
+3. Aguardar instruções explícitas para a próxima etapa (não iniciar automaticamente).

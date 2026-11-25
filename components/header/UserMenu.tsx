@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { User, LogIn, UserPlus, Shield, Package, Settings, LogOut, ChevronDown, CheckCircle2, AlertCircle } from 'lucide-react';
+import { User, LogIn, UserPlus, Shield, Package, Settings, LogOut, ChevronDown, CheckCircle2, AlertCircle, Heart } from 'lucide-react';
 import { createClient } from '@/lib/supabase/browser';
 
 export function UserMenu() {
@@ -205,6 +205,14 @@ export function UserMenu() {
                 >
                   <Package className="w-4 h-4 text-wolf-400" />
                   Meus Pedidos
+                </Link>
+                <Link
+                  href="/favoritos"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-2.5 px-4 py-2 text-xs text-wolf-200 hover:bg-wolf-900 hover:text-white"
+                >
+                  <Heart className="w-4 h-4 text-wolf-400" />
+                  Meus Favoritos
                 </Link>
                 <Link
                   href="/minha-conta/dados"

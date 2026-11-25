@@ -1,18 +1,34 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Header } from '@/components/header/Header';
 import { Footer } from '@/components/footer/Footer';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { useFavorites } from '@/context/favorites-context';
+import { createClient } from '@/lib/supabase/browser';
 import { Product } from '@/types';
 import { MOCK_PRODUCTS } from '@/lib/data/products';
-import { Heart, RefreshCw } from 'lucide-react';
+import { Heart, RefreshCw, LogIn, Sparkles } from 'lucide-react';
 
 export default function FavoritosPage() {
   const { favoriteIds } = useFavorites();
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        setIsLoggedIn(!!user);
+      } catch {
+        setIsLoggedIn(false);
+      }
+    }
+    checkAuth();
+  }, []);
 
   useEffect(() => {
     async function loadFavoriteProducts() {
@@ -52,7 +68,7 @@ export default function FavoritosPage() {
       <Header />
 
       <section className="bg-gradient-to-r from-wolf-950 via-wolf-900 to-black border-b border-wolf-800 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
           <span className="text-xs font-mono text-accent uppercase tracking-widest font-bold">
             SUA LISTA DE DESEJOS
           </span>
@@ -61,8 +77,24 @@ export default function FavoritosPage() {
             MEUS FAVORITOS ({favoriteProducts.length})
           </h1>
           <p className="text-sm text-wolf-400 font-mono">
-            Seus tênis salvos são sincronizados com a sua conta White Wolf Company.
+            Seus tênis prediletos reunidos em um só lugar com acesso rápido e estoque em tempo real.
           </p>
+
+          {!isLoggedIn && (
+            <div className="mt-4 p-3 bg-wolf-900/90 border border-wolf-800 rounded-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-mono">
+              <div className="flex items-center gap-2 text-wolf-300">
+                <Sparkles className="w-4 h-4 text-accent shrink-0" />
+                <span>Você está navegando como visitante. Entre na sua conta para salvar seus favoritos permanentemente.</span>
+              </div>
+              <Link
+                href="/login?redirect=/favoritos"
+                className="px-3 py-1.5 bg-accent hover:bg-rose-700 text-white font-bold uppercase rounded-xs tracking-wider shrink-0 flex items-center gap-1.5 transition-colors"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                Entrar na Conta
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
