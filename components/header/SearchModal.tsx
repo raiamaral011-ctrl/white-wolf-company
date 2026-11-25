@@ -78,7 +78,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar por tênis, roupas, maratonas, marcas (ex: Ultraboost, Nike)..."
+            placeholder="Buscar por tênis, modelo, corrida, maratona ou marca (ex: Air Max, Campus, Nike)..."
             className="flex-1 bg-transparent text-white placeholder-wolf-500 font-sans text-sm focus:outline-none"
             autoFocus
           />
