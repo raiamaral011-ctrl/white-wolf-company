@@ -1,7 +1,7 @@
-# WHITE WOLF COMPANY — REGISTRO DE PROGRESSO (PROMPTS 1, 2 & 3)
+# WHITE WOLF COMPANY — REGISTRO DE PROGRESSO (PROMPTS 1, 2, 3 & 4)
 > **Arquivo Oficial de Acompanhamento e Continuidade de Tarefas**
-> Atualizado em: 25/11/2026
-> Status: PROMPT 1, PROMPT 2 E PROMPT 3 CONCLUÍDOS COM SUCESSO
+> Atualizado em: 26/11/2026
+> Status: PROMPTS 1, 2, 3 E 4 EXECUTADOS COM SUCESSO
 
 ---
 
@@ -10,6 +10,7 @@
   - `backup-before-prompt-1` (Tag e branch `backup/pre-prompt-1`)
   - `backup-before-prompt-2` (Tag e branch `backup/pre-prompt-2`)
   - `backup-before-prompt-3` (Tag e branch `backup/pre-prompt-3`)
+  - `backup-before-prompt-4` (Tag e branch `backup/pre-prompt-4`)
 - **Ambientes Conectados e Operacionais:**
   - GitHub: `raiamaral011-ctrl/white-wolf-company` (Branch `main`)
   - Supabase: `white-wolf-company` (`tdwqrqcyhrprzijguulo`) - `ACTIVE_HEALTHY`
@@ -17,120 +18,139 @@
 
 ---
 
-## 2. Detalhamento da Execução do Prompt 3 (Sistema Completo de Clientes e Conta)
+## 2. Detalhamento da Execução do Prompt 4
 
-### 2.1 Cadastro de Clientes
-- **Componente:** `app/cadastro/page.tsx`
-- **Validação e Fluxo:**
-  - Validação estrita via Zod (`registerSchema`), garantindo nome completo, e-mail válido, senha mínima de 6 caracteres e confirmação de senha idêntica.
-  - Normalização de dados: e-mails convertidos para minúsculo e sem espaços em branco (`trim().toLowerCase()`).
-  - Criação de usuário no Supabase Auth com metadados (`full_name`, `cpf`, `phone`, `role: 'customer'`).
-  - Associação automática do perfil na tabela `profiles`.
-  - Tratamento e tradução amigável de erros (ex: *"Este e-mail já está cadastrado. Faça login para continuar."*, *"A senha deve conter no mínimo 6 caracteres"*).
-  - Feedback visual de sucesso com indicador animado antes do redirecionamento seguro para `/minha-conta`.
-  - Garantia de que clientes jamais criam contas com privilégios administrativos.
+### 2.1 Remoção da Seleção de Numeração ao Passar o Mouse nos Cards (Item 12)
+- **Componente:** `components/product/ProductCard.tsx`
+- **Modificações:**
+  - Remoção completa do painel flutuante que aparecia em hover com o texto `"NUMERAÇÃO MASCULINA:"`, botões de tamanho e botão `"ADICIONAR AO CARRINHO"`.
+  - A imagem dos tênis agora permanece limpa e desobstruída.
+  - O carrossel de fotos individuais (setas laterais circulares e indicadores de pontos) continua funcionando perfeitamente.
+  - O botão de favoritos (coração) continua ativo e persistindo no banco de dados.
+  - O card redireciona de forma limpa para a página de detalhes do tênis (`/produto/[slug]`).
 
-### 2.2 Login e Logout Reais
-- **Componentes:** `app/login/page.tsx`, `components/header/UserMenu.tsx`, `app/api/auth/logout/route.ts`
-- **Funcionamento:**
-  - Login suporta e-mail ou nome de usuário, identificando credenciais válidas.
-  - Mensagens de erro claras e traduzidas para português em caso de falha de autenticação.
-  - Redirecionamento inteligente: para a URL de origem (`redirectParam`), para `/admin` (se administrador) ou `/minha-conta` (se cliente).
-  - Logout real: chama `supabase.auth.signOut()` no cliente e invalida cookies de sessão no servidor (`/api/auth/logout` e `/api/admin/logout`).
-  - Limpeza imediata do estado global e redirecionamento rígido (`window.location.href = '/'`) impedindo que a sessão anterior permaneça no cache de rota.
+### 2.2 Padronização da Numeração de Todos os Tênis (37 a 45) (Item 13)
+- **Banco de Dados (Supabase):**
+  - Script executado em todos os produtos existentes no banco: todas as variantes faltantes no intervalo 37..45 foram cadastradas com estoque real `0` (sem criar estoque fictício).
+  - Todos os 58 produtos cadastrados possuem variantes completas e ordenadas de 37 a 45.
+- **Página de Detalhes do Produto (`app/produto/[slug]/page.tsx`):**
+  - Sequência estrita e crescente de 37 a 45 (`STANDARD_SHOE_SIZES = ['37', '38', '39', '40', '41', '42', '43', '44', '45']`).
+  - Tamanhos sem estoque aparecem com indicador tachado (*line-through*), desabilitados para seleção e compra.
+  - Apenas tamanhos com estoque positivo (`stock > 0`) podem ser adicionados ao carrinho.
+  - O tamanho padrão selecionado é automaticamente o primeiro número com estoque disponível.
+- **Painel Administrativo (`app/admin/produtos/novo/page.tsx` e `app/admin/produtos/[id]/page.tsx`):**
+  - Grade automática de 37 a 45 pronta para o administrador.
+  - Cada numeração possui chave de disponibilidade (*toggle* Ativo/Inativo) e campo de quantidade em estoque.
+  - Botões de conveniência *"Ativar Todos"* e *"Desativar Todos"*.
+  - Ao salvar ou editar o produto, a disponibilidade e os estoques de cada tamanho são persistidos de forma segura no Supabase.
+- **Carrinho e Checkout:**
+  - Carrinho atualizado exibindo Imagem, Nome do tênis, Marca, Tamanho escolhido, Quantidade, Preço Unitário, Subtotal e Valor Total.
+  - Checkout valida produto, tamanho, estoque e recalcula todos os preços no servidor a partir do banco.
 
-### 2.3 Minha Conta & Dados Pessoais
-- **Componentes:** `app/minha-conta/page.tsx`, `app/minha-conta/dados/page.tsx`, `app/api/profile/route.ts`
-- **Recursos:**
-  - Exibição de saudação personalizada com o nome e e-mail real do atleta autenticado.
-  - Edição de dados cadastrais (nome completo, CPF, telefone) com atualização persistida no Supabase `profiles`.
-  - Proteção de escalada de privilégios: a rota `/api/profile` proíbe terminantemente alteração de `role`.
-  - Isolamento de dados garantido por RLS e filtragem por `user_id`.
-
-### 2.4 Produtos Favoritos Vinculados à Conta
-- **Componentes:** `app/api/favorites/route.ts`, `context/favorites-context.tsx`, `app/favoritos/page.tsx`, `components/product/ProductCard.tsx`
-- **Funcionamento:**
-  - Tabela `favorites` no Supabase com chave única `(user_id, product_id)`.
-  - Nova API RESTful `/api/favorites` com métodos `GET`, `POST` e `DELETE`.
-  - `FavoritesProvider` atualizado com sincronização em tempo real com o banco para usuários autenticados.
-  - Migração/merge automático: se um visitante favoritou itens e posteriormente entrou na conta, seus favoritos locais são sincronizados com o banco de dados.
-  - Fallback em `localStorage` preservado para visitantes não autenticados com aviso amigável convidando para login.
-  - Ícone de coração nos cards de produtos refletindo fielmente o estado real e persistido.
-  - Página `/favoritos` estilizada exibindo imagens, nomes, preços, link de detalhes, remoção instantânea e botão de compra rápida.
-
-### 2.5 Meus Pedidos & Detalhes do Pedido
-- **Componentes:** `app/minha-conta/pedidos/page.tsx`, `app/minha-conta/pedidos/[id]/page.tsx`, `app/api/orders/route.ts`, `app/api/orders/[id]/route.ts`
-- **Recursos:**
-  - Consulta estrita aos pedidos pertencentes ao cliente autenticado (`user_id` ou e-mail correspondente).
-  - Listagem dos pedidos reais com data formatada, status estilizado por badge (aprovado, enviado, etc.) e valor total.
-  - Itens do pedido incluem imagem do tênis, nome do produto, SKU, tamanho escolhido, cor, quantidade e valor.
-  - Página de detalhes do pedido (`/minha-conta/pedidos/[id]`) com endereço completo de entrega, resumo financeiro e status de pagamento.
-  - Bloqueio de segurança 403 Forbidden caso outro cliente tente acessar a URL de um pedido que não lhe pertence.
-
-### 2.6 Integração Carrinho & Checkout
-- **Componentes:** `app/checkout/page.tsx`, `app/api/checkout/route.ts`
-- **Recursos:**
-  - Ao entrar no checkout, os dados do perfil autenticado (nome, e-mail, CPF, telefone) são automaticamente preenchidos.
-  - Pedido é associado ao `user_id` autenticado no momento da criação.
-  - Validação rigorosa de estoque por tamanho e baixa automática de estoque na tabela `product_variants`.
-  - Criação do pedido em `orders` e itens em `order_items` no Supabase.
-
-### 2.7 Menu do Usuário Atualizado
-- **Componente:** `components/header/UserMenu.tsx`
-- **Estados:**
-  - **Visitante (Não autenticado):** *Entrar*, *Criar Conta* e link secundário para *Acesso Administrativo*.
-  - **Cliente Autenticado:** Nome do usuário, *Minha Conta*, *Meus Pedidos*, *Meus Favoritos*, *Dados Pessoais* e *Sair da Conta*.
-  - **Administrador:** Badge de identificação ADMIN, link prioritário de destaque para *PAINEL ADMINISTRATIVO*, além das opções pessoais e encerramento de sessão.
-
-### 2.8 Segurança & Políticas RLS
-- RLS ativo e validado em `profiles`, `orders`, `order_items`, `favorites`, `payments`.
-- Migração `003_protect_profile_role.sql` aplicada no banco de dados com trigger `prevent_profile_role_escalation` e cláusula `WITH CHECK` na política de UPDATE, impedindo qualquer alteração não autorizada de `role` para `admin`.
-- Clientes consultam exclusivamente seus próprios dados e compras.
-- Nenhuma chave restrita exposta no cliente.
+### 2.3 Integração Oficial Mercado Pago (Checkout Pro & Webhook)
+- **Biblioteca Centralizada:** `lib/mercadopago/client.ts`
+  - Utilização do SDK oficial `mercadopago` (versão 2.3.0).
+  - Suporte flexível às variáveis de ambiente oficiais (`MERCADO_PAGO_ACCESS_TOKEN` ou `MERCADOPAGO_ACCESS_TOKEN`).
+  - Geração de preferências de pagamento via Checkout Pro (`createMercadoPagoPreference`) no servidor:
+    - Identificação de cada item com nome, tamanho, preço unitário do banco e quantidade.
+    - Metadados do comprador (Nome, CPF, E-mail, Telefone com DDD e Endereço).
+    - `external_reference` vinculado ao identificador do pedido (`orderId`).
+    - Configuração de `back_urls` para retorno e `notification_url` para o webhook.
+  - Consulta ao estado real da transação (`getMercadoPagoPaymentDetails`).
+  - Validação de assinatura criptográfica HMAC SHA-256 (`verifyMercadoPagoSignature`) usando o cabeçalho `x-signature` (`ts` e `v1`) e `crypto.timingSafeEqual`.
+- **Rota de Checkout (`app/api/checkout/route.ts`):**
+  - Validação de estoque e preços reais no banco de dados.
+  - Criação do pedido com status `pending` associado ao cliente logado.
+  - Criação da preferência no Mercado Pago e retorno da URL de checkout (`checkoutUrl`).
+- **Página de Retorno e Feedback (`app/checkout/feedback/page.tsx`):**
+  - Consulta o estado real do pedido no servidor via `/api/checkout/status`.
+  - Tratamento visual coerente para os 3 estados oficiais:
+    - **Aprovado:** Confirmação de compra, resumo dos itens e link para Meus Pedidos.
+    - **Pendente:** Aviso de análise da transação pelo Mercado Pago e botão para recarregar status.
+    - **Recusado:** Informação de não aprovação com opção de tentar novamente no checkout.
+- **Webhook de Confirmação (`app/api/webhooks/mercadopago/route.ts`):**
+  - Validação de autenticidade da notificação.
+  - Consulta da transação diretamente na API do Mercado Pago.
+  - Idempotência: impede reprocessamento ou desconto duplo de estoque para notificações repetidas.
+  - Baixa de estoque segura nos tamanhos comprados somente na primeira transição para `approved`.
+  - Atualização dos registros nas tabelas `orders` e `payments`.
+- **Painel Administrativo de Pedidos (`app/admin/pedidos/page.tsx`):**
+  - Coluna dedicada com o identificador de transação / preferência do Mercado Pago (`payment_id`).
+  - Visualização de valores, datas, cliente, e-mail e status do pagamento.
 
 ---
 
-## 3. Relatório da Bateria de Testes Obrigatórios do Prompt 3 (`scripts/test_prompt3.js`)
+## 3. Relatório da Bateria de Testes (Prompt 4)
 
-| # | Cenário Testado | Status | Detalhes do Resultado Real |
+| ID | Cenário de Teste | Resultado | Detalhes |
 |---|---|---|---|
-| **A1** | Bloqueio de e-mail duplicado no cadastro | ✅ APROVADO | Rejeitado corretamente com código `user_already_exists` |
-| **A2** | Criação do usuário no Supabase Auth | ✅ APROVADO | Usuário de teste criado e autenticado |
-| **A3** | Criação e integridade do perfil em `profiles` | ✅ APROVADO | Perfil criado com `role='customer'`, nome e dados sincronizados |
-| **A4** | Bloqueio de escalada de privilégios (`role`) | ✅ APROVADO | Tentativa de alteração para `admin` bloqueada por RLS/trigger |
-| **B1** | Login com credenciais reais | ✅ APROVADO | Sessão e token JWT emitidos com sucesso |
-| **B2** | Persistência da sessão após reload simulado | ✅ APROVADO | Sessão válida e usuário mantido ativo |
-| **B3** | Logout real (`signOut`) | ✅ APROVADO | Sessão revogada com sucesso no Supabase e servidor |
-| **B4** | Confirmação de sessão encerrada | ✅ APROVADO | Estado local e sessão nulos após logout |
-| **C1** | Favoritar tênis no banco de dados | ✅ APROVADO | Produto registrado com sucesso na tabela `favorites` |
-| **C2** | Persistência dos favoritos na conta | ✅ APROVADO | Favoritos recuperados do banco após recarregamento |
-| **C3** | Remoção de produto dos favoritos | ✅ APROVADO | Exclusão pontual realizada na tabela `favorites` |
-| **D1** | Registro de compra vinculada ao usuário | ✅ APROVADO | Pedido e itens registrados no banco vinculados ao `user_id` |
-| **D2** | Consulta em Meus Pedidos pelo titular | ✅ APROVADO | Titular acessa e consulta histórico com sucesso |
-| **D3** | Isolamento de pedidos (outro cliente não acessa) | ✅ APROVADO | Cliente 2 impedido de acessar compras do Cliente 1 (RLS) |
-| **E1** | Conta administrativa identificada | ✅ APROVADO | Administrador identificado com perfil `admin` |
-| **E2** | Permissões administrativas preservadas | ✅ APROVADO | Painel e recursos administrativos operacionais |
+| **T01** | Remoção de numeração e quick-add no hover do card | ✅ APROVADO | Card limpo confirmado: sem overlay de numeração, carrossel e favoritos 100% preservados. |
+| **T02** | Padronização de numeração 37 a 45 no Supabase | ✅ APROVADO | Todos os 58 produtos possuem variantes completas de 37 a 45. |
+| **T03** | Grade fixa 37 a 45 e bloqueio sem estoque na página de detalhes | ✅ APROVADO | Grade 37..45 em ordem crescente; tamanhos esgotados desabilitados para compra. |
+| **T04** | Formulários Administrativos (Novo e Edição) com grade 37-45 | ✅ APROVADO | Grade automática com ativação/desativação e edição de estoque por tamanho. |
+| **T05** | Detalhamento do Carrinho de Compras | ✅ APROVADO | Imagem, nome, marca, tamanho, quantidade, preço unitário e subtotal exibidos. |
+| **T06** | Validação de Assinatura HMAC-SHA256 do Webhook | ✅ APROVADO | Algoritmo oficial `x-signature` com `crypto.timingSafeEqual` validado. |
+| **T07** | Validação no Servidor da Rota de Checkout | ✅ APROVADO | Preços e estoque consultados no servidor; proteção contra manipulação client-side. |
+| **T08** | Idempotência e Baixa Segura de Estoque no Webhook | ✅ APROVADO | Idempotência validada contra notificações repetidas; baixa atômica de estoque. |
+| **T09** | Página de Retorno / Feedback inteligente | ✅ APROVADO | Consulta status real via `/api/checkout/status`; cobre Aprovado, Pendente e Recusado. |
+| **T10** | Painel Administrativo de Pedidos | ✅ APROVADO | Exibe pedidos, clientes, valores, status e IDs da transação Mercado Pago. |
 
-**Resultado Geral da Bateria:** 16 de 16 testes aprovados (100% de sucesso).
+**Resultado:** 10 de 10 testes aprovados (100% de conformidade).
 
 ---
 
-## 4. Testes Ponta a Ponta por Marca (`node test_brands_purchase.js`)
-- **Nike:** ✅ Aprovado (Air Max 90 Preto) — Baixa de estoque 5 -> 4
-- **Adidas:** ✅ Aprovado (Tênis Campus 00s) — Baixa de estoque 4 -> 3
-- **ASICS:** ✅ Aprovado (Superblast 3) — Baixa de estoque 10 -> 9
-- **Puma:** ✅ Aprovado (Tênis Smash v2) — Baixa de estoque 10 -> 9
-- **New Balance:** ✅ Aprovado (Tênis New Balance 9060) — Baixa de estoque 10 -> 9
+## 4. Arquivos Modificados e Criados
+
+### Arquivos Modificados:
+- `components/product/ProductCard.tsx` (Remoção do hover de numeração rápida)
+- `app/produto/[slug]/page.tsx` (Grade padrão 37..45 e validação de estoque)
+- `app/carrinho/page.tsx` (Exibição explícita de preço unitário e subtotal)
+- `app/checkout/page.tsx` (Fluxo de Checkout Pro Mercado Pago)
+- `app/admin/produtos/novo/page.tsx` (Grade 37-45 com chaves de ativação)
+- `app/admin/produtos/[id]/page.tsx` (Edição com grade 37-45 e chaves de ativação)
+- `app/admin/pedidos/page.tsx` (Exibição de transações e metadados MP)
+- `app/api/checkout/route.ts` (Geração de preferência Checkout Pro no servidor)
+- `app/api/webhooks/mercadopago/route.ts` (Webhook com assinatura e idempotência)
+- `lib/mercadopago/client.ts` (SDK oficial, preferência, consulta e HMAC)
+- `.env.example` (Documentação das variáveis Mercado Pago)
+
+### Arquivos Criados:
+- `app/checkout/feedback/page.tsx` (Página de retorno com consulta em tempo real)
+- `app/api/checkout/status/route.ts` (Endpoint seguro para consulta de status do pedido)
+- `scripts/standardize_database_sizes.js` (Script de migração dos tamanhos 37..45 no Supabase)
+- `scripts/test_prompt4.js` (Bateria automatizada de testes do Prompt 4)
 
 ---
 
-## 5. Build de Produção Next.js
-- `next build`: ✅ Compilado com sucesso (0 erros, 45 páginas geradas, incluindo `/api/favorites`, `/favoritos`, `/minha-conta/dados`, `/minha-conta/pedidos/[id]`).
+## 5. Como Ativar Pagamentos Reais em Produção
+
+Para ativar os pagamentos reais na Vercel e no ambiente local:
+
+### 1. Obter as Credenciais no Painel do Mercado Pago:
+1. Acesse o painel de desenvolvedores: [Mercado Pago Developers](https://www.mercadopago.com.br/developers/panel/app).
+2. Selecione sua aplicação da **White Wolf Company**.
+3. No menu lateral, acesse **Credenciais de Produção**.
+4. Copie o **Access Token** (`APP_USR-...`) e a **Public Key**.
+5. No menu **Webhooks / Notificações**, copie a **Chave secreta** (*Webhook Secret*).
+
+### 2. Configurar as Variáveis de Ambiente na Vercel:
+Acesse as configurações do projeto na Vercel (*Project Settings -> Environment Variables*) e adicione:
+- `MERCADO_PAGO_ACCESS_TOKEN`: Seu Access Token de Produção (`APP_USR-...`).
+- `MERCADO_PAGO_PUBLIC_KEY`: Sua Public Key (`APP_USR-...`).
+- `MERCADO_PAGO_WEBHOOK_SECRET`: A chave secreta de assinatura do webhook.
+- `NEXT_PUBLIC_APP_URL`: `https://white-wolf-company.vercel.app` (ou domínio de produção).
+
+### 3. Configurar a URL de Webhook no Mercado Pago:
+1. No painel do Mercado Pago, vá em **Webhooks / Notificações**.
+2. Configure a URL de produção:
+   `https://white-wolf-company.vercel.app/api/webhooks/mercadopago`
+3. Selecione o evento: **Pagamentos (payments)**.
+4. Salve a configuração.
 
 ---
 
 ## 6. Instruções para Continuidade ("RETOMAR AO PROMPT")
-Ao receber a instrução **RETOMAR AO PROMPT**:
-1. Ler este arquivo `WHITE_WOLF_PROGRESS.md`.
-2. Confirmar que os Prompts 1, 2 e 3 foram 100% concluídos e testados.
-3. Aguardar instruções explícitas para a próxima etapa (não iniciar automaticamente).
+Ao enviar **RETOMAR AO PROMPT**:
+1. Leia este arquivo `WHITE_WOLF_PROGRESS.md`.
+2. Verifique o estado do Git e as variáveis de ambiente ativas.
+3. Prossiga a partir da última tarefa pendente ou instruções adicionais fornecidas.

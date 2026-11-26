@@ -19,6 +19,8 @@ interface ProductPageProps {
   };
 }
 
+const STANDARD_SHOE_SIZES = ['37', '38', '39', '40', '41', '42', '43', '44', '45'];
+
 export default function ProductDetailPage({ params }: ProductPageProps) {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,7 +29,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
 
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedSize, setSelectedSize] = useState<string>('40');
+  const [selectedSize, setSelectedSize] = useState<string>('37');
   const [selectedColor, setSelectedColor] = useState<string>('Padrão');
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [cep, setCep] = useState('');
@@ -42,10 +44,13 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           if (data && data.gender?.toLowerCase() === 'masculino') {
             setProduct(data);
             if (data.variants && data.variants.length > 0) {
-              const sortedVariants = [...data.variants].sort((a: ProductVariant, b: ProductVariant) => Number(a.size) - Number(b.size));
-              const firstInStock = sortedVariants.find((v: ProductVariant) => (v.stock || 0) > 0);
-              setSelectedSize(firstInStock ? firstInStock.size : sortedVariants[0].size);
-              setSelectedColor(sortedVariants[0].color_name || 'Padrão');
+              // Find first available size in 37..45 with stock > 0
+              const firstInStock = STANDARD_SHOE_SIZES.find((sz) => {
+                const v = data.variants.find((item: ProductVariant) => String(item.size) === sz);
+                return v && (v.stock || 0) > 0;
+              });
+              setSelectedSize(firstInStock || '37');
+              setSelectedColor(data.variants[0]?.color_name || 'Padrão');
             }
           } else {
             setProduct(null);
@@ -87,13 +92,21 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     ? product.images
     : [{ id: '1', url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800', alt: product.name, sort_order: 1, created_at: '', product_id: product.id }];
 
-  const currentVariant = product.variants?.find((v) => v.size === selectedSize);
-  const currentVariantStock = currentVariant ? (currentVariant.stock ?? 10) : 10;
+  const standardizedSizes = STANDARD_SHOE_SIZES.map((sz) => {
+    const v = product.variants?.find((item) => String(item.size) === sz);
+    return {
+      size: sz,
+      stock: v ? (v.stock ?? 0) : 0,
+      variant: v,
+    };
+  });
+
+  const currentVariantObj = standardizedSizes.find((v) => v.size === selectedSize);
+  const currentVariant = currentVariantObj?.variant;
+  const currentVariantStock = currentVariantObj ? currentVariantObj.stock : 0;
   const isCurrentVariantOutOfStock = currentVariantStock <= 0;
 
-  const totalStock = product.variants && product.variants.length > 0
-    ? product.variants.reduce((sum, v) => sum + (v.stock || 0), 0)
-    : 10;
+  const totalStock = standardizedSizes.reduce((sum, v) => sum + v.stock, 0);
   const isEntirelyOutOfStock = totalStock <= 0;
 
   const handleAddToCart = () => {
@@ -286,18 +299,10 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               </button>
             </div>
 
-            <div className="grid grid-cols-4 gap-2">
-              {((product.variants && product.variants.length > 0 ? [...product.variants].sort((a, b) => Number(a.size) - Number(b.size)) : null) || [
-                { size: '38', stock: 10 },
-                { size: '39', stock: 10 },
-                { size: '40', stock: 10 },
-                { size: '41', stock: 10 },
-                { size: '42', stock: 10 },
-                { size: '43', stock: 10 },
-                { size: '44', stock: 10 },
-                { size: '45', stock: 10 },
-              ]).map((v) => {
-                const varOutOfStock = (v.stock ?? 10) <= 0;
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+              {standardizedSizes.map((v) => {
+                const varOutOfStock = v.stock <= 0;
+                const isSelected = selectedSize === v.size;
                 return (
                   <button
                     key={v.size}
@@ -305,10 +310,11 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                     onClick={() => {
                       if (!varOutOfStock) setSelectedSize(v.size);
                     }}
+                    title={varOutOfStock ? `Tamanho ${v.size} esgotado` : `Tamanho ${v.size} (${v.stock} em estoque)`}
                     className={`py-3 text-xs font-mono font-bold border rounded-xs transition-all relative ${
                       varOutOfStock
-                        ? 'border-wolf-900 bg-wolf-950/80 text-wolf-600 line-through cursor-not-allowed'
-                        : selectedSize === v.size
+                        ? 'border-wolf-900 bg-wolf-950/80 text-wolf-600 line-through cursor-not-allowed opacity-50'
+                        : isSelected
                         ? 'border-accent bg-accent text-white shadow-lg'
                         : 'border-wolf-800 bg-wolf-900 text-wolf-300 hover:border-wolf-600 hover:text-white'
                     }`}

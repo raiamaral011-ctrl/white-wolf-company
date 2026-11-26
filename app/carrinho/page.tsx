@@ -74,9 +74,11 @@ export default function CarrinhoPage() {
                       <Link href={`/produto/${item.product.slug}`} className="text-sm font-bold text-white hover:text-accent line-clamp-1">
                         {item.product.name}
                       </Link>
-                      <p className="text-xs text-wolf-400 font-mono mt-1">
-                        Tamanho: <strong className="text-white">{item.variant.size}</strong>
-                      </p>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-wolf-400 font-mono mt-1">
+                        <span>Tamanho: <strong className="text-white">{item.variant.size}</strong></span>
+                        <span className="text-wolf-600">|</span>
+                        <span>Preço Unitário: <strong className="text-white">{formatCurrency(item.product.price)}</strong></span>
+                      </div>
                     </div>
                   </div>
 
@@ -87,9 +89,12 @@ export default function CarrinhoPage() {
                       <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-2.5 py-1 text-xs text-wolf-300 hover:text-white hover:bg-wolf-800">+</button>
                     </div>
 
-                    <span className="text-sm font-mono font-bold text-white">
-                      {formatCurrency(item.product.price * item.quantity)}
-                    </span>
+                    <div className="text-right">
+                      <span className="text-[10px] font-mono text-wolf-500 uppercase block">Subtotal</span>
+                      <span className="text-sm font-mono font-bold text-white">
+                        {formatCurrency(item.product.price * item.quantity)}
+                      </span>
+                    </div>
 
                     <button onClick={() => removeItem(item.id)} className="text-wolf-500 hover:text-rose-400 p-1">
                       <Trash2 className="w-4 h-4" />

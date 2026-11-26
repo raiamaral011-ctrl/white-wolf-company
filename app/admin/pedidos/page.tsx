@@ -133,6 +133,7 @@ export default function AdminPedidosPage() {
                 <th className="p-4">CLIENTE</th>
                 <th className="p-4">DATA</th>
                 <th className="p-4">TOTAL</th>
+                <th className="p-4">TRANSAÇÃO / MP</th>
                 <th className="p-4">PAGAMENTO</th>
                 <th className="p-4">STATUS</th>
                 <th className="p-4 text-right">AÇÕES</th>
@@ -147,10 +148,16 @@ export default function AdminPedidosPage() {
                 return (
                   <tr key={o.id} className="hover:bg-wolf-950/50">
                     <td className="p-4 font-bold text-white">#{o.id}</td>
-                    <td className="p-4 text-wolf-300">{customerName}</td>
+                    <td className="p-4 text-wolf-300">
+                      <div>{customerName}</div>
+                      <div className="text-[10px] text-wolf-500">{o.customer_info?.email}</div>
+                    </td>
                     <td className="p-4 text-wolf-400">{dateStr}</td>
                     <td className="p-4 font-bold text-emerald-400">{formatCurrency(o.total || 0)}</td>
-                    <td className="p-4 text-wolf-400 uppercase">{o.payment_status || 'Pendente'}</td>
+                    <td className="p-4 font-mono text-[11px] text-wolf-300 truncate max-w-[140px]" title={o.payment_id || 'Pendente'}>
+                      {o.payment_id || '—'}
+                    </td>
+                    <td className="p-4 text-wolf-400 uppercase font-bold text-[11px]">{o.payment_status || 'Pendente'}</td>
                     <td className="p-4">
                       <span className={`px-2.5 py-1 border text-[10px] uppercase font-bold rounded-xs ${badgeClass}`}>
                         {o.status}
@@ -191,6 +198,8 @@ export default function AdminPedidosPage() {
               <p className="text-white font-bold">Cliente: <span className="text-wolf-300">{selectedOrder.customer_info?.full_name || selectedOrder.customer_info?.fullName}</span></p>
               <p className="text-white font-bold">Email: <span className="text-wolf-300">{selectedOrder.customer_info?.email}</span></p>
               <p className="text-white font-bold">Total: <span className="text-emerald-400">{formatCurrency(selectedOrder.total)}</span></p>
+              <p className="text-white font-bold">ID Transação / MP: <span className="text-sky-400 font-mono">{selectedOrder.payment_id || 'Pendente / Não gerado'}</span></p>
+              <p className="text-white font-bold">Data do Pedido: <span className="text-wolf-300">{new Date(selectedOrder.created_at || Date.now()).toLocaleString('pt-BR')}</span></p>
               
               <div className="pt-2 border-t border-wolf-800 space-y-1">
                 <p className="text-wolf-400 font-bold uppercase">Itens:</p>

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkoutSchema } from '@/lib/validation/schemas';
-import { processMercadoPagoPayment } from '@/lib/mercadopago/client';
+import { createMercadoPagoPreference, getMercadoPagoAccessToken } from '@/lib/mercadopago/client';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { MOCK_PRODUCTS } from '@/lib/data/products';
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
     const supabase = createAdminClient();
 
-    // Try to get authenticated user if present
+    // 1. Try to get authenticated user if present
     let authUserId: string | null = null;
     try {
       const serverClient = createClient();
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
         authUserId = user.id;
       }
     } catch {
-      // Guest checkout
+      // Guest session fallback
     }
 
     // Fallback: If not found in cookie session, check client passed userId or profile email
@@ -55,23 +55,24 @@ export async function POST(request: Request) {
       }
     }
 
-    // SERVER-SIDE PRICE & STOCK VALIDATION
+    // 2. SERVER-SIDE PRICE & STOCK VALIDATION (Never trust client prices)
     let serverSubtotal = 0;
     const validatedOrderItems = [];
-    const stockUpdates: { variant_id: string; new_stock: number }[] = [];
+    const preferenceItems = [];
 
     for (const item of cartItems) {
       const pId = item.product?.id || item.productId;
       const vId = item.variant?.id || item.variantId;
+      const requestedSize = String(item.variant?.size || item.size || '40');
 
       let dbProduct: any = null;
       let dbVariant: any = null;
 
-      // 1. Query Supabase
+      // Query Supabase for real product & variants
       if (pId) {
         const { data: prodData } = await supabase
           .from('products')
-          .select('*, variants:product_variants(*)')
+          .select('*, variants:product_variants(*), brand:brands(name)')
           .eq('id', pId)
           .single();
 
@@ -80,17 +81,20 @@ export async function POST(request: Request) {
           if (vId) {
             dbVariant = prodData.variants?.find((v: any) => v.id === vId);
           }
+          if (!dbVariant) {
+            dbVariant = prodData.variants?.find((v: any) => String(v.size) === requestedSize);
+          }
           if (!dbVariant && prodData.variants?.length > 0) {
             dbVariant = prodData.variants[0];
           }
         }
       }
 
-      // Fallback to MOCK_PRODUCTS if database query didn't return
+      // Fallback to MOCK_PRODUCTS if database did not have product
       if (!dbProduct) {
         dbProduct = MOCK_PRODUCTS.find((p) => p.id === pId);
         if (dbProduct && dbProduct.variants) {
-          dbVariant = dbProduct.variants.find((v: any) => v.id === vId) || dbProduct.variants[0];
+          dbVariant = dbProduct.variants.find((v: any) => String(v.size) === requestedSize) || dbProduct.variants[0];
         }
       }
 
@@ -101,12 +105,12 @@ export async function POST(request: Request) {
         );
       }
 
-      // Check Stock
-      const currentStock = dbVariant ? dbVariant.stock : 10;
-      if (currentStock < item.quantity) {
+      // Stock check: Validate stock before accepting order
+      const availableStock = dbVariant ? (dbVariant.stock ?? 0) : 0;
+      if (availableStock < item.quantity) {
         return NextResponse.json(
           {
-            error: `Estoque insuficiente para "${dbProduct.name}" (Tamanho: ${item.variant?.size || 'Padrão'}). Estoque disponível: ${currentStock}.`,
+            error: `Estoque insuficiente para "${dbProduct.name}" (Tamanho: ${requestedSize}). Estoque disponível: ${availableStock} unidades.`,
           },
           { status: 400 }
         );
@@ -117,66 +121,39 @@ export async function POST(request: Request) {
       serverSubtotal += itemSubtotal;
 
       const variantIdToUse = dbVariant?.id || vId || `var-${Date.now()}`;
+      const itemSize = dbVariant?.size ? String(dbVariant.size) : requestedSize;
 
       validatedOrderItems.push({
         product_id: dbProduct.id,
         variant_id: variantIdToUse,
         product_name: dbProduct.name,
         product_sku: dbVariant?.sku || dbProduct.sku,
-        size: item.variant?.size || dbVariant?.size || 'Padrão',
+        size: itemSize,
         color: item.variant?.color_name || dbVariant?.color_name || 'Padrão',
         quantity: item.quantity,
         unit_price: realUnitPrice,
         subtotal: itemSubtotal,
       });
 
-      if (dbVariant?.id) {
-        stockUpdates.push({
-          variant_id: dbVariant.id,
-          new_stock: Math.max(0, currentStock - item.quantity),
-        });
-      }
+      preferenceItems.push({
+        id: dbProduct.id,
+        title: `${dbProduct.name} - Tam ${itemSize}`,
+        description: `Tênis ${dbProduct.name} (Tamanho: ${itemSize})`,
+        quantity: item.quantity,
+        unit_price: realUnitPrice,
+        picture_url: dbProduct.images?.[0]?.url || item.product?.images?.[0]?.url,
+      });
     }
 
-    // Calculate shipping on server
+    // Shipping calculation on server
     const serverShipping =
       validatedData.shippingMethod === 'express' ? 34.9 : serverSubtotal >= 299 ? 0 : 19.9;
-    // Discount for PIX (5%)
-    const serverDiscount = validatedData.paymentMethod === 'pix' ? serverSubtotal * 0.05 : 0;
+    const serverDiscount = 0; // Checkout Pro calculates payment method discounts directly in MP
     const serverTotal = serverSubtotal + serverShipping - serverDiscount;
 
-    // Create unique order ID
-    const orderId = `ORD-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
+    // Generate unique order ID
+    const orderId = `WW-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    // Process payment with Mercado Pago
-    const paymentResult = await processMercadoPagoPayment({
-      orderId,
-      total: serverTotal,
-      paymentMethod: validatedData.paymentMethod,
-      payer: {
-        email: validatedData.email,
-        first_name: validatedData.fullName.split(' ')[0],
-        last_name: validatedData.fullName.split(' ').slice(1).join(' ') || undefined,
-        identification: {
-          type: 'CPF',
-          number: validatedData.cpf.replace(/\D/g, ''),
-        },
-      },
-      cardToken: validatedData.cardToken,
-      installments: validatedData.installments,
-    });
-
-    if (!paymentResult.success) {
-      return NextResponse.json(
-        { error: paymentResult.error || 'Falha ao processar pagamento.' },
-        { status: 400 }
-      );
-    }
-
-    const finalOrderStatus = paymentResult.status === 'approved' ? 'approved' : 'pending';
-    const finalPaymentStatus = paymentResult.status || 'pending';
-
-    // 1. SAVE ORDER TO SUPABASE
     const shippingAddressJson = {
       street: validatedData.street,
       number: validatedData.number,
@@ -194,14 +171,64 @@ export async function POST(request: Request) {
       phone: validatedData.phone,
     };
 
+    // 3. Create Mercado Pago Preference
+    const cleanCpf = validatedData.cpf.replace(/\D/g, '');
+    const cleanPhone = (validatedData.phone || '').replace(/\D/g, '');
+    const phoneArea = cleanPhone.length >= 10 ? cleanPhone.slice(0, 2) : '11';
+    const phoneNumber = cleanPhone.length >= 10 ? cleanPhone.slice(2) : cleanPhone;
+
+    const mpResult = await createMercadoPagoPreference({
+      orderId,
+      items: preferenceItems,
+      shippingCost: serverShipping,
+      payer: {
+        email: validatedData.email,
+        first_name: validatedData.fullName.split(' ')[0],
+        last_name: validatedData.fullName.split(' ').slice(1).join(' ') || 'Cliente',
+        identification: {
+          type: 'CPF',
+          number: cleanCpf,
+        },
+        phone: {
+          area_code: phoneArea,
+          number: phoneNumber,
+        },
+        address: {
+          zip_code: validatedData.cep.replace(/\D/g, ''),
+          street_name: validatedData.street,
+          street_number: parseInt(validatedData.number, 10) || 1,
+        },
+      },
+    });
+
+    if (!mpResult.success && mpResult.requiresConfiguration) {
+      return NextResponse.json(
+        {
+          error: mpResult.error,
+          requiresConfiguration: true,
+          variableName: 'MERCADO_PAGO_ACCESS_TOKEN',
+        },
+        { status: 503 }
+      );
+    }
+
+    if (!mpResult.success || !mpResult.checkoutUrl) {
+      return NextResponse.json(
+        { error: mpResult.error || 'Falha ao gerar checkout no Mercado Pago.' },
+        { status: 500 }
+      );
+    }
+
+    // 4. Save pending order in Supabase
     const { data: dbOrder, error: orderErr } = await supabase
       .from('orders')
       .insert({
+        id: orderId,
         user_id: authUserId,
-        status: finalOrderStatus,
-        payment_status: finalPaymentStatus,
+        status: 'pending',
+        payment_status: 'pending',
         payment_provider: 'mercadopago',
-        payment_id: paymentResult.paymentId || orderId,
+        payment_id: mpResult.preferenceId || orderId,
         subtotal: serverSubtotal,
         discount: serverDiscount,
         shipping: serverShipping,
@@ -212,19 +239,17 @@ export async function POST(request: Request) {
       .select()
       .single();
 
-    if (orderErr || !dbOrder) {
+    if (orderErr) {
       console.error('Error inserting order in Supabase:', orderErr);
       return NextResponse.json(
-        { error: 'Erro ao registrar pedido no banco de dados: ' + (orderErr?.message || '') },
+        { error: 'Erro ao registrar pedido no banco de dados: ' + orderErr.message },
         { status: 500 }
       );
     }
 
-    const createdOrderId = dbOrder.id;
-
-    // 2. SAVE ORDER ITEMS TO SUPABASE
+    // 5. Save order items
     const orderItemsRows = validatedOrderItems.map((item) => ({
-      order_id: createdOrderId,
+      order_id: orderId,
       product_id: item.product_id,
       variant_id: item.variant_id,
       product_name: item.product_name,
@@ -238,46 +263,29 @@ export async function POST(request: Request) {
 
     await supabase.from('order_items').insert(orderItemsRows);
 
-    // 3. SAVE PAYMENT RECORD TO SUPABASE
+    // 6. Save payment reference
     await supabase.from('payments').insert({
-      order_id: createdOrderId,
+      order_id: orderId,
       provider: 'mercadopago',
-      provider_payment_id: paymentResult.paymentId || orderId,
-      status: finalPaymentStatus,
+      provider_payment_id: mpResult.preferenceId || orderId,
+      status: 'pending',
       amount: serverTotal,
       currency: 'BRL',
-      payment_method: validatedData.paymentMethod,
-      qr_code: paymentResult.qrCode,
-      qr_code_base64: paymentResult.qrCodeBase64,
+      payment_method: 'mercadopago_checkout_pro',
     });
-
-    // 4. DECREMENT STOCK IN SUPABASE
-    for (const update of stockUpdates) {
-      await supabase
-        .from('product_variants')
-        .update({ stock: update.new_stock, updated_at: new Date().toISOString() })
-        .eq('id', update.variant_id);
-    }
 
     return NextResponse.json({
       success: true,
+      orderId,
+      preferenceId: mpResult.preferenceId,
+      checkoutUrl: mpResult.checkoutUrl,
+      sandboxCheckoutUrl: mpResult.sandboxCheckoutUrl,
       order: {
-        id: createdOrderId,
-        status: finalOrderStatus,
-        paymentStatus: finalPaymentStatus,
-        paymentMethod: validatedData.paymentMethod,
-        subtotal: serverSubtotal,
-        discount: serverDiscount,
-        shipping: serverShipping,
+        id: orderId,
+        status: 'pending',
+        paymentStatus: 'pending',
         total: serverTotal,
-        shippingAddress: shippingAddressJson,
-        customerInfo: customerInfoJson,
         items: validatedOrderItems,
-        paymentDetails: {
-          paymentId: paymentResult.paymentId,
-          qrCode: paymentResult.qrCode,
-          qrCodeBase64: paymentResult.qrCodeBase64,
-        },
       },
     });
   } catch (error: any) {

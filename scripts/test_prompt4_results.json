@@ -1,0 +1,62 @@
+[
+  {
+    "id": "T01_CARD_CLEAN",
+    "name": "Remoção de numeração e quick-add no hover do card",
+    "passed": true,
+    "details": "Card limpo confirmado: sem caixa de numeração, sem overlay flutuante, carrossel e favoritos preservados."
+  },
+  {
+    "id": "T02_DB_SIZES_37_45",
+    "name": "Padronização de numeração 37 a 45 no banco Supabase",
+    "passed": true,
+    "details": "Todos os 58 produtos cadastrados possuem variantes completas de 37 a 45."
+  },
+  {
+    "id": "T03_DETAIL_PAGE_SIZES",
+    "name": "Página de detalhes com grade fixa 37 a 45 e bloqueio sem estoque",
+    "passed": true,
+    "details": "Grade padronizada 37..45 em ordem crescente, variantes esgotadas devidamente desabilitadas."
+  },
+  {
+    "id": "T04_ADMIN_GRID_37_45",
+    "name": "Formulários Administrativos com grade 37-45 automática e chave de ativação",
+    "passed": true,
+    "details": "Admin novo e edição carregam automaticamente 37 a 45 com controle individual de estoque e disponibilidade."
+  },
+  {
+    "id": "T05_CART_REQUIREMENTS",
+    "name": "Carrinho com imagem, nome, marca, tamanho, quantidade, preço unitário e subtotal",
+    "passed": true,
+    "details": "Carrinho de compras totalmente detalhado com todos os metadados exigidos pela especificação."
+  },
+  {
+    "id": "T06_WEBHOOK_SIGNATURE",
+    "name": "Validação de autenticidade HMAC-SHA256 do Webhook Mercado Pago",
+    "passed": true,
+    "details": "Algoritmo oficial x-signature (ts e v1) implementado conforme especificação Mercado Pago com crypto.timingSafeEqual."
+  },
+  {
+    "id": "T07_CHECKOUT_SERVER_VALIDATION",
+    "name": "Criação de preferência Checkout Pro e validação estrita no servidor",
+    "passed": true,
+    "details": "Preço e estoque consultados diretamente do banco no servidor; cliente impedido de manipular valores."
+  },
+  {
+    "id": "T08_WEBHOOK_IDEMPOTENCY",
+    "name": "Idempotência do Webhook e baixa segura de estoque na confirmação",
+    "passed": true,
+    "details": "Notificações repetidas reconhecidas sem descontar estoque duas vezes; baixa segura executada apenas na primeira aprovação."
+  },
+  {
+    "id": "T09_FEEDBACK_PAGE",
+    "name": "Página de retorno inteligente consultando status real do servidor",
+    "passed": true,
+    "details": "Consulta direta via API /api/checkout/status; mensagens claras para Aprovado, Pendente e Recusado."
+  },
+  {
+    "id": "T10_ADMIN_ORDERS",
+    "name": "Painel administrativo com pedidos, clientes, valores, status e IDs de transação",
+    "passed": true,
+    "details": "Gestão de pedidos completa com consulta a ID de transação Mercado Pago e dados do comprador."
+  }
+]

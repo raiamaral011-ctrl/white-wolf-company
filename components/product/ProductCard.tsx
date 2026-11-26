@@ -6,23 +6,17 @@ import Link from 'next/link';
 import { Product, ProductVariant } from '@/types';
 import { formatCurrency, calculateInstallments } from '@/lib/utils';
 import { useFavorites } from '@/context/favorites-context';
-import { useCart } from '@/context/cart-context';
 import {
-  Heart, ShoppingBag, Star, AlertTriangle, ChevronLeft, ChevronRight
+  Heart, Star, AlertTriangle, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
 }
 
-const DEFAULT_MALE_SIZES = ['38', '39', '40', '41', '42', '43', '44', '45'];
-
 export function ProductCard({ product }: ProductCardProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
-  const { addItem } = useCart();
-  const [isHovered, setIsHovered] = useState(false);
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
 
   const favorite = isFavorite(product.id);
@@ -55,10 +49,9 @@ export function ProductCard({ product }: ProductCardProps) {
     setCurrentImgIndex((prev) => (prev + 1) % imagesList.length);
   };
 
-  // Build sorted list of all available variants/sizes (ensuring full support up to 45)
-  const variantsList: { size: string; stock: number; variant?: ProductVariant }[] = (() => {
+  // Build sorted list of all available variants/sizes
+  const variantsList = (() => {
     if (product.variants && product.variants.length > 0) {
-      // Sort numerically by size
       const sorted = [...product.variants].sort((a, b) => Number(a.size) - Number(b.size));
       return sorted.map((v) => ({
         size: String(v.size),
@@ -66,44 +59,19 @@ export function ProductCard({ product }: ProductCardProps) {
         variant: v,
       }));
     }
-    // Fallback if variants table has not yet loaded for mock data
-    return DEFAULT_MALE_SIZES.map((sz) => ({
-      size: sz,
-      stock: 10,
-    }));
+    return [];
   })();
 
   // Calculate total stock across all sizes
-  const totalStock = variantsList.reduce((sum, v) => sum + v.stock, 0);
+  const totalStock = variantsList.length > 0
+    ? variantsList.reduce((sum, v) => sum + v.stock, 0)
+    : 10;
   const isOutOfStock = totalStock <= 0;
 
   const installments = calculateInstallments(product.price);
   const discountPercent = product.compare_at_price && product.compare_at_price > product.price
     ? Math.round(((product.compare_at_price - product.price) / product.compare_at_price) * 100)
     : null;
-
-  const handleQuickAdd = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (isOutOfStock) return;
-
-    // Find selected variant or first available variant with stock > 0
-    const matched = variantsList.find((v) => (selectedSize ? v.size === selectedSize : v.stock > 0)) || variantsList[0];
-    const availableVariant: ProductVariant = matched.variant || {
-      id: `${product.id}-${matched.size}`,
-      product_id: product.id,
-      sku: `${product.sku}-${matched.size}`,
-      size: matched.size,
-      color: '#0f172a',
-      color_name: 'Padrão',
-      stock: matched.stock,
-      created_at: '',
-      updated_at: '',
-    };
-
-    addItem(product, availableVariant, 1);
-  };
 
   return (
     <div
@@ -112,8 +80,6 @@ export function ProductCard({ product }: ProductCardProps) {
           ? 'border-rose-950/60 opacity-90'
           : 'border-wolf-800 hover:border-wolf-600'
       }`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       {/* BADGES */}
       <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5 pointer-events-none">
@@ -209,73 +175,6 @@ export function ProductCard({ product }: ProductCardProps) {
               ))}
             </div>
           </>
-        )}
-
-        {/* QUICK ADD SIZE OVERLAY ON HOVER (SHOWS ALL SIZES UP TO 45 WITH STOCK) */}
-        {!isOutOfStock ? (
-          <div
-            className={`absolute inset-x-0 bottom-0 p-3 bg-wolf-950/95 backdrop-blur-md border-t border-wolf-800 transition-all duration-300 flex flex-col gap-2 z-20 ${
-              isHovered ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-mono text-wolf-400 tracking-wider">
-                NUMERAÇÃO MASCULINA:
-              </span>
-              {selectedSize && (
-                <span className="text-[10px] font-mono text-accent font-bold">
-                  Tam: {selectedSize}
-                </span>
-              )}
-            </div>
-
-            {/* Grid of sizes up to 45 */}
-            <div className="grid grid-cols-4 sm:grid-cols-4 gap-1">
-              {variantsList.map((v) => {
-                const varOutOfStock = v.stock <= 0;
-                const isSelected = selectedSize === v.size;
-                return (
-                  <button
-                    key={v.size}
-                    disabled={varOutOfStock}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (!varOutOfStock) setSelectedSize(v.size);
-                    }}
-                    title={varOutOfStock ? `Tamanho ${v.size} esgotado` : `Tamanho ${v.size} (${v.stock} em estoque)`}
-                    className={`py-1 text-[10px] font-mono border rounded-xs transition-colors font-bold ${
-                      varOutOfStock
-                        ? 'border-wolf-900 bg-wolf-900/60 text-wolf-600 line-through cursor-not-allowed'
-                        : isSelected
-                        ? 'border-accent bg-accent text-white'
-                        : 'border-wolf-700 bg-wolf-900/80 text-wolf-300 hover:border-white hover:text-white'
-                    }`}
-                  >
-                    {v.size}
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              onClick={handleQuickAdd}
-              className="w-full py-2 bg-accent hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors mt-1 rounded-xs shadow-md"
-            >
-              <ShoppingBag className="w-3.5 h-3.5" />
-              ADICIONAR AO CARRINHO
-            </button>
-          </div>
-        ) : (
-          <div
-            className={`absolute inset-x-0 bottom-0 p-3 bg-rose-950/95 backdrop-blur-sm border-t border-rose-900 transition-all duration-300 text-center z-20 ${
-              isHovered ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
-            }`}
-          >
-            <span className="text-[11px] font-mono font-bold text-rose-300 uppercase tracking-wider">
-              PRODUTO INDISPONÍVEL
-            </span>
-          </div>
         )}
       </div>
 

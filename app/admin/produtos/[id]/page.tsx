@@ -14,6 +14,7 @@ interface VariantInput {
   stock: number;
   color: string;
   color_name: string;
+  active?: boolean;
 }
 
 interface MediaFile {
@@ -117,17 +118,20 @@ export default function AdminEditProdutoPage({ params }: { params: { id: string 
             is_maratona: !!product.is_maratona,
           });
 
-          // Load variants
-          const mappedVariants = (product.variants || []).map((v: any) => ({
-            size: v.size,
-            stock: v.stock || 0,
-            color: v.color || '#0f172a',
-            color_name: v.color_name || 'Padrão',
-          }));
-          setVariants(mappedVariants.length > 0 ? mappedVariants : [
-            { size: '39', stock: 10, color: '#0f172a', color_name: 'Padrão' },
-            { size: '40', stock: 10, color: '#0f172a', color_name: 'Padrão' },
-          ]);
+          // Load variants standardized 37-45
+          const existingMap = new Map<string, any>((product.variants || []).map((v: any) => [String(v.size), v]));
+          const mappedVariants = DEFAULT_SIZES.map((sz) => {
+            const existing: any = existingMap.get(sz);
+            const stock = existing ? (existing.stock ?? 0) : 0;
+            return {
+              size: sz,
+              stock,
+              color: existing?.color || '#0f172a',
+              color_name: existing?.color_name || 'Padrão',
+              active: stock > 0,
+            };
+          });
+          setVariants(mappedVariants);
 
           // Load media (images/videos)
           const mappedMedia = (product.images || []).map((img: any, idx: number) => ({
@@ -241,7 +245,7 @@ export default function AdminEditProdutoPage({ params }: { params: { id: string 
     setVariants(variants.filter((_, idx) => idx !== i));
   };
 
-  const updateVariant = (i: number, field: keyof VariantInput, value: string | number) => {
+  const updateVariant = (i: number, field: keyof VariantInput, value: string | number | boolean) => {
     setVariants(variants.map((v, idx) => (idx === i ? { ...v, [field]: value } : v)));
   };
 
@@ -287,13 +291,20 @@ export default function AdminEditProdutoPage({ params }: { params: { id: string 
       }
 
       // 2. Submit PUT details
+      const sanitizedVariants = variants.map(v => ({
+        size: v.size,
+        stock: v.active === false ? 0 : v.stock,
+        color: v.color || '#0f172a',
+        color_name: v.color_name || 'Padrão',
+      }));
+
       const res = await fetch(`/api/admin/products/${productId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
           media: finalMedia,
-          variants,
+          variants: sanitizedVariants,
         }),
       });
 
@@ -774,113 +785,126 @@ export default function AdminEditProdutoPage({ params }: { params: { id: string 
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-sm font-black uppercase tracking-widest text-wolf-300">
-                    TAMANHOS E ESTOQUE
+                    GRADE PADRÃO DE TAMANHOS (37 A 45) E ESTOQUE
                   </h2>
                   <p className="text-[11px] font-mono text-wolf-500 mt-1">
-                    Gerencie o estoque para cada tamanho do produto no Supabase.
+                    Ative ou desative cada numeração e altere o estoque no Supabase. Tamanhos inativos ou com estoque 0 aparecem como <strong className="text-rose-400">ESGOTADOS</strong> na loja.
                   </p>
                 </div>
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={addCommonSizes}
-                    className="px-3 py-1.5 bg-wolf-800 hover:bg-wolf-700 text-wolf-200 font-mono text-[10px] font-bold uppercase rounded-xs flex items-center gap-1.5"
+                    onClick={() => {
+                      setVariants(prev => prev.map(v => ({ ...v, active: true, stock: v.stock === 0 ? 10 : v.stock })));
+                    }}
+                    className="px-3 py-1.5 bg-wolf-800 hover:bg-wolf-700 text-emerald-400 font-mono text-[10px] font-bold uppercase rounded-xs transition-colors"
                   >
-                    <Plus className="w-3.5 h-3.5" /> 37-45
+                    Ativar Todos
                   </button>
                   <button
                     type="button"
-                    onClick={addVariant}
-                    className="px-3 py-1.5 bg-accent hover:bg-rose-700 text-white font-mono text-[10px] font-bold uppercase rounded-xs flex items-center gap-1.5"
+                    onClick={() => {
+                      setVariants(prev => prev.map(v => ({ ...v, active: false, stock: 0 })));
+                    }}
+                    className="px-3 py-1.5 bg-wolf-800 hover:bg-wolf-700 text-rose-400 font-mono text-[10px] font-bold uppercase rounded-xs transition-colors"
                   >
-                    <Plus className="w-3.5 h-3.5" /> ADICIONAR
+                    Desativar Todos
                   </button>
                 </div>
               </div>
 
               <div className="space-y-3">
                 {/* Headers */}
-                <div className="grid grid-cols-12 gap-3 text-[10px] font-mono text-wolf-500 uppercase px-1">
+                <div className="grid grid-cols-12 gap-3 text-[10px] font-mono text-wolf-500 uppercase px-2">
+                  <div className="col-span-2">DISPONIBILIDADE</div>
                   <div className="col-span-2">TAMANHO</div>
                   <div className="col-span-3">ESTOQUE</div>
                   <div className="col-span-3">NOME DA COR</div>
-                  <div className="col-span-3">COR (HEX)</div>
-                  <div className="col-span-1"></div>
+                  <div className="col-span-2">COR (HEX)</div>
                 </div>
 
-                {variants.map((v, i) => (
-                  <div key={i} className="grid grid-cols-12 gap-3 items-center">
-                    <div className="col-span-2">
-                      <input
-                        type="text"
-                        value={v.size}
-                        onChange={e => updateVariant(i, 'size', e.target.value)}
-                        placeholder="40"
-                        className={`w-full bg-wolf-950 border focus:outline-none px-3 py-2 text-xs font-mono text-white text-center rounded-xs ${
-                          !v.size.trim() ? 'border-rose-700' : 'border-wolf-800 focus:border-accent'
-                        }`}
-                      />
-                    </div>
+                {variants.map((v, i) => {
+                  const isAvailable = v.active !== false && v.stock > 0;
+                  return (
+                    <div key={i} className={`grid grid-cols-12 gap-3 items-center p-2 rounded-xs transition-colors ${!isAvailable ? 'bg-wolf-950/40 opacity-60' : 'bg-wolf-950/80 border border-wolf-800/60'}`}>
+                      <div className="col-span-2 flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={isAvailable}
+                          onChange={e => {
+                            const active = e.target.checked;
+                            updateVariant(i, 'active' as any, active);
+                            if (!active) {
+                              updateVariant(i, 'stock', 0);
+                            } else if (v.stock === 0) {
+                              updateVariant(i, 'stock', 10);
+                            }
+                          }}
+                          className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                        />
+                        <span className={`text-[11px] font-mono font-bold ${isAvailable ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {isAvailable ? 'Disponível' : 'Inativo'}
+                        </span>
+                      </div>
 
-                    <div className="col-span-3 flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => updateVariant(i, 'stock', Math.max(0, v.stock - 1))}
-                        className="w-7 h-8 bg-wolf-800 hover:bg-rose-700 text-white flex items-center justify-center rounded-xs font-bold"
-                      >−</button>
-                      <input
-                        type="number"
-                        min={0}
-                        value={v.stock}
-                        onChange={e => updateVariant(i, 'stock', Math.max(0, parseInt(e.target.value, 10) || 0))}
-                        className={`flex-1 bg-wolf-950 border focus:outline-none px-2 py-2 text-xs font-mono text-center text-white rounded-xs font-bold ${
-                          v.stock === 0 ? 'border-rose-700 text-rose-400' : 'border-wolf-800 focus:border-accent'
-                        }`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => updateVariant(i, 'stock', v.stock + 1)}
-                        className="w-7 h-8 bg-wolf-800 hover:bg-emerald-700 text-white flex items-center justify-center rounded-xs font-bold"
-                      >+</button>
-                    </div>
+                      <div className="col-span-2">
+                        <span className="w-full inline-block bg-wolf-900 border border-wolf-800 px-3 py-2 text-xs font-mono text-white text-center rounded-xs font-black">
+                          {v.size}
+                        </span>
+                      </div>
 
-                    <div className="col-span-3">
-                      <input
-                        type="text"
-                        value={v.color_name}
-                        onChange={e => updateVariant(i, 'color_name', e.target.value)}
-                        placeholder="Preto"
-                        className="w-full bg-wolf-950 border border-wolf-800 focus:border-accent px-3 py-2 text-xs font-mono text-white rounded-xs focus:outline-none"
-                      />
-                    </div>
+                      <div className="col-span-3 flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          disabled={!isAvailable}
+                          onClick={() => updateVariant(i, 'stock', Math.max(0, v.stock - 1))}
+                          className="w-7 h-8 bg-wolf-800 hover:bg-rose-700 disabled:opacity-40 text-white flex items-center justify-center rounded-xs font-bold"
+                        >−</button>
+                        <input
+                          type="number"
+                          min={0}
+                          disabled={!isAvailable}
+                          value={v.stock}
+                          onChange={e => updateVariant(i, 'stock', Math.max(0, parseInt(e.target.value, 10) || 0))}
+                          className={`flex-1 bg-wolf-950 border focus:outline-none px-2 py-2 text-xs font-mono text-center text-white rounded-xs font-bold disabled:opacity-40 ${
+                            v.stock === 0 ? 'border-rose-700 text-rose-400' : 'border-wolf-800 focus:border-accent'
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          disabled={!isAvailable}
+                          onClick={() => updateVariant(i, 'stock', v.stock + 1)}
+                          className="w-7 h-8 bg-wolf-800 hover:bg-emerald-700 disabled:opacity-40 text-white flex items-center justify-center rounded-xs font-bold"
+                        >+</button>
+                      </div>
 
-                    <div className="col-span-3 flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={v.color}
-                        onChange={e => updateVariant(i, 'color', e.target.value)}
-                        className="w-9 h-8 bg-wolf-950 border border-wolf-800 rounded-xs cursor-pointer"
-                      />
-                      <input
-                        type="text"
-                        value={v.color}
-                        onChange={e => updateVariant(i, 'color', e.target.value)}
-                        className="flex-1 bg-wolf-950 border border-wolf-800 focus:border-accent px-2 py-2 text-xs font-mono text-white rounded-xs focus:outline-none"
-                      />
-                    </div>
+                      <div className="col-span-3">
+                        <input
+                          type="text"
+                          value={v.color_name}
+                          onChange={e => updateVariant(i, 'color_name', e.target.value)}
+                          placeholder="Padrão"
+                          className="w-full bg-wolf-950 border border-wolf-800 focus:border-accent px-3 py-2 text-xs font-mono text-white rounded-xs focus:outline-none"
+                        />
+                      </div>
 
-                    <div className="col-span-1 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => removeVariant(i)}
-                        disabled={variants.length <= 1}
-                        className="w-8 h-8 bg-rose-950/60 hover:bg-rose-700 border border-rose-900 text-rose-400 hover:text-white flex items-center justify-center rounded-xs transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="col-span-2 flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={v.color}
+                          onChange={e => updateVariant(i, 'color', e.target.value)}
+                          className="w-8 h-8 bg-wolf-950 border border-wolf-800 rounded-xs cursor-pointer shrink-0"
+                        />
+                        <input
+                          type="text"
+                          value={v.color}
+                          onChange={e => updateVariant(i, 'color', e.target.value)}
+                          className="flex-1 bg-wolf-950 border border-wolf-800 focus:border-accent px-2 py-2 text-xs font-mono text-white rounded-xs focus:outline-none"
+                        />
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="pt-4 border-t border-wolf-800 flex flex-col sm:flex-row items-center justify-between gap-4">

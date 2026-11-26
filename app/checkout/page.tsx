@@ -105,8 +105,6 @@ export default function CheckoutPage() {
             city: formData.city,
             state: formData.state,
             shippingMethod: formData.shippingMethod,
-            paymentMethod: formData.paymentMethod,
-            installments: formData.installments,
           },
           items,
         }),
@@ -115,12 +113,21 @@ export default function CheckoutPage() {
       const data = await res.json();
 
       if (!res.ok) {
+        if (data.requiresConfiguration) {
+          throw new Error(`Configuração Necessária: ${data.error}`);
+        }
         throw new Error(data.error || 'Erro ao finalizar pedido.');
       }
 
-      setCreatedOrder(data.order);
-      setStep(5);
       clearCart();
+
+      if (data.checkoutUrl) {
+        // Redirect to Mercado Pago official Checkout Pro
+        window.location.href = data.checkoutUrl;
+      } else {
+        setCreatedOrder(data.order);
+        setStep(5);
+      }
     } catch (err: any) {
       setErrorMessage(err.message || 'Erro inesperado durante o checkout.');
     } finally {
@@ -450,89 +457,75 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              {/* STEP 4: PAYMENT */}
+              {/* STEP 4: PAYMENT (MERCADO PAGO CHECKOUT PRO) */}
               {step === 4 && (
-                <div className="space-y-4">
-                  <h2 className="text-lg font-bold font-heading uppercase text-white border-b border-wolf-800 pb-3">
-                    4. PAGAMENTO MERCADO PAGO
-                  </h2>
-                  <div className="space-y-3">
-                    <label className={`p-4 border rounded-sm flex items-center justify-between cursor-pointer transition-colors ${formData.paymentMethod === 'pix' ? 'border-accent bg-wolf-950' : 'border-wolf-800 bg-wolf-950/40'}`}>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="payment"
-                          checked={formData.paymentMethod === 'pix'}
-                          onChange={() => handleChange('paymentMethod', 'pix')}
-                          className="accent-rose-600"
-                        />
-                        <div className="flex items-center gap-2">
-                          <QrCode className="w-5 h-5 text-emerald-400" />
-                          <div>
-                            <span className="text-xs font-bold text-white uppercase block">PIX (5% DE DESCONTO)</span>
-                            <span className="text-[11px] text-wolf-400">Aprovação imediata e QR Code na tela.</span>
-                          </div>
-                        </div>
-                      </div>
-                      <span className="text-xs font-mono font-bold text-emerald-400">DESCONTO 5%</span>
-                    </label>
+                <div className="space-y-6">
+                  <div className="border-b border-wolf-800 pb-4">
+                    <span className="text-[11px] font-mono text-accent font-bold uppercase tracking-widest block">
+                      AMBIENTE OFICIAL SEGURO
+                    </span>
+                    <h2 className="text-xl font-black font-heading uppercase text-white flex items-center gap-2">
+                      <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                      4. PAGAMENTO COM MERCADO PAGO
+                    </h2>
+                  </div>
 
-                    <label className={`p-4 border rounded-sm flex items-center justify-between cursor-pointer transition-colors ${formData.paymentMethod === 'credit_card' ? 'border-accent bg-wolf-950' : 'border-wolf-800 bg-wolf-950/40'}`}>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="payment"
-                          checked={formData.paymentMethod === 'credit_card'}
-                          onChange={() => handleChange('paymentMethod', 'credit_card')}
-                          className="accent-rose-600"
-                        />
-                        <div className="flex items-center gap-2">
-                          <CreditCard className="w-5 h-5 text-accent" />
-                          <div>
-                            <span className="text-xs font-bold text-white uppercase block">CARTÃO DE CRÉDITO</span>
-                            <span className="text-[11px] text-wolf-400">Parcele em até 10x sem juros.</span>
-                          </div>
-                        </div>
+                  <div className="p-5 bg-wolf-950 border border-wolf-800 rounded-sm space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-sky-950 border border-sky-800 flex items-center justify-center shrink-0">
+                        <Lock className="w-5 h-5 text-sky-400" />
                       </div>
-                    </label>
+                      <div>
+                        <h3 className="text-sm font-bold text-white uppercase font-heading">
+                          CHECKOUT PRO MERCADO PAGO
+                        </h3>
+                        <p className="text-xs text-wolf-300 mt-0.5">
+                          Você será redirecionado para o ambiente seguro do Mercado Pago para concluir o seu pagamento com máxima proteção e criptografia de ponta a ponta.
+                        </p>
+                      </div>
+                    </div>
 
-                    {/* CREDIT CARD FIELDS IF CARD SELECTED */}
-                    {formData.paymentMethod === 'credit_card' && (
-                      <div className="p-4 bg-wolf-950 border border-wolf-800 space-y-3 rounded-sm mt-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-wolf-800/80">
+                      <div className="p-3 bg-wolf-900/80 border border-wolf-800 rounded-xs flex items-center gap-2.5">
+                        <QrCode className="w-4 h-4 text-emerald-400 shrink-0" />
                         <div>
-                          <label className="text-[11px] font-mono text-wolf-400 block mb-1">NÚMERO DO CARTÃO</label>
-                          <input
-                            type="text"
-                            placeholder="0000 0000 0000 0000"
-                            value={formData.cardNumber}
-                            onChange={(e) => handleChange('cardNumber', e.target.value)}
-                            className="w-full bg-wolf-900 border border-wolf-800 px-3 py-2 text-xs text-white focus:outline-none focus:border-accent"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="text-[11px] font-mono text-wolf-400 block mb-1">VALIDADE (MM/AA)</label>
-                            <input
-                              type="text"
-                              placeholder="12/28"
-                              value={formData.cardExp}
-                              onChange={(e) => handleChange('cardExp', e.target.value)}
-                              className="w-full bg-wolf-900 border border-wolf-800 px-3 py-2 text-xs text-white focus:outline-none focus:border-accent"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[11px] font-mono text-wolf-400 block mb-1">CVV</label>
-                            <input
-                              type="text"
-                              placeholder="123"
-                              value={formData.cardCvv}
-                              onChange={(e) => handleChange('cardCvv', e.target.value)}
-                              className="w-full bg-wolf-900 border border-wolf-800 px-3 py-2 text-xs text-white focus:outline-none focus:border-accent"
-                            />
-                          </div>
+                          <span className="text-xs font-bold text-white block">PIX</span>
+                          <span className="text-[10px] text-wolf-400 font-mono">Aprovação instantânea</span>
                         </div>
                       </div>
-                    )}
+                      <div className="p-3 bg-wolf-900/80 border border-wolf-800 rounded-xs flex items-center gap-2.5">
+                        <CreditCard className="w-4 h-4 text-sky-400 shrink-0" />
+                        <div>
+                          <span className="text-xs font-bold text-white block">CARTÃO DE CRÉDITO</span>
+                          <span className="text-[10px] text-wolf-400 font-mono">Em até 10x sem juros</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-wolf-900/40 border border-wolf-800/60 rounded-xs text-[11px] font-mono text-wolf-400">
+                      ✓ Seus dados bancários e de cartão são protegidos diretamente pelo Mercado Pago.<br />
+                      ✓ Confirmação automática via Webhook em tempo real.
+                    </div>
+                  </div>
+
+                  {/* PRODUCTS REVIEW IN STEP 4 */}
+                  <div className="space-y-2">
+                    <span className="text-xs font-mono text-wolf-400 uppercase tracking-wider block">
+                      ITENS A SEREM PAGOS ({items.length}):
+                    </span>
+                    <div className="divide-y divide-wolf-800 border border-wolf-800 bg-wolf-950 rounded-xs max-h-48 overflow-y-auto">
+                      {items.map((it) => (
+                        <div key={it.id} className="p-3 flex items-center justify-between text-xs font-mono">
+                          <div>
+                            <span className="text-white font-bold block">{it.product.name}</span>
+                            <span className="text-wolf-400 text-[11px]">Tam: {it.variant.size} | Qtd: {it.quantity}</span>
+                          </div>
+                          <span className="text-accent font-bold">
+                            {formatCurrency(it.product.price * it.quantity)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -553,7 +546,7 @@ export default function CheckoutPage() {
                   disabled={loading}
                   className="ml-auto px-8 py-3.5 bg-accent hover:bg-rose-700 text-white font-black text-xs uppercase tracking-widest flex items-center gap-2 transition-all shadow-xl shadow-rose-950/50 disabled:opacity-50"
                 >
-                  {loading ? 'PROCESSANDO...' : step === 4 ? 'FINALIZAR E PAGAR' : 'AVANÇAR DA ETAPA →'}
+                  {loading ? 'PROCESSANDO...' : step === 4 ? 'PAGAR COM MERCADO PAGO →' : 'AVANÇAR DA ETAPA →'}
                 </button>
               </div>
             </div>
