@@ -1,7 +1,7 @@
-# WHITE WOLF COMPANY — REGISTRO DE PROGRESSO (PROMPTS 1, 2, 3 & 4)
+# WHITE WOLF COMPANY — REGISTRO DE PROGRESSO (PROMPTS 1, 2, 3, 4 & 5)
 > **Arquivo Oficial de Acompanhamento e Continuidade de Tarefas**
 > Atualizado em: 26/11/2026
-> Status: PROMPTS 1, 2, 3 E 4 EXECUTADOS COM SUCESSO
+> Status: PROMPTS 1, 2, 3, 4 E 5 EXECUTADOS COM SUCESSO
 
 ---
 
@@ -11,6 +11,7 @@
   - `backup-before-prompt-2` (Tag e branch `backup/pre-prompt-2`)
   - `backup-before-prompt-3` (Tag e branch `backup/pre-prompt-3`)
   - `backup-before-prompt-4` (Tag e branch `backup/pre-prompt-4`)
+  - `backup-before-prompt-5` (Tag e branch `backup/pre-prompt-5`)
 - **Ambientes Conectados e Operacionais:**
   - GitHub: `raiamaral011-ctrl/white-wolf-company` (Branch `main`)
   - Supabase: `white-wolf-company` (`tdwqrqcyhrprzijguulo`) - `ACTIVE_HEALTHY`
@@ -99,7 +100,75 @@
 
 ---
 
-## 4. Arquivos Modificados e Criados
+## 4. Detalhamento da Execução do Prompt 5 (Ajustes no Menu & Numeração 37 a 45)
+
+### 4.1 Remoção da Opção "Corrida de Rua" do Menu "TODOS OS TÊNIS"
+- **Componente:** `components/header/Header.tsx`
+- **Modificações:**
+  - Removido exclusivamente o item e link `Corrida de Rua` (`href="/produtos?sport=corrida"`).
+  - Espaçamentos e layout perfeitamente preservados sem lacunas visuais.
+  - Opções restantes no menu drop-down mantidas ativas:
+    1. 👟 Ver Todos os Calçados (`/produtos`)
+    2. Treino & Academia (`/produtos?sport=academia`)
+    3. Casual & Lifestyle (`/produtos?sport=lifestyle`)
+    4. 🏃 Tênis de Maratona (`/maratona`)
+    5. 🔥 Ofertas & Descontos (`/ofertas`)
+  - Identidade visual, carrosséis, pesquisa e categorias mantidos 100% íntegros.
+
+### 4.2 Padronização e Exibição do Tamanho 37
+- **Filtros do Catálogo (`components/product/ProductFilters.tsx`):**
+  - Atualizado array `MALE_SIZES` para iniciar em `37`: `['37', '38', '39', '40', '41', '42', '43', '44', '45']`.
+  - Permite aos clientes filtrar calçados pelo tamanho 37 diretamente na listagem da loja.
+- **Tabela de Guia de Medidas (`app/produto/[slug]/page.tsx`):**
+  - Adicionado tamanho 37 (24.5 cm) e tamanho 45 (30.5 cm) na tabela do modal Guia de Tamanhos.
+- **Formulários Administrativos de Produtos (`app/admin/produtos/novo/page.tsx` e `[id]/page.tsx`):**
+  - Grade automática iniciando em 37 até 45 para novos produtos e produtos existentes.
+  - Controle de disponibilidade e estoque em unidades reais salvo no Supabase.
+- **Fluxo Completo de Compra (Carrinho -> Checkout -> Pedido):**
+  - Seleção do tamanho 37 no detalhe do produto.
+  - Preservação do tamanho 37 no carrinho de compras.
+  - Checkout validando produto, tamanho e estoque real no servidor.
+  - Criação do pedido com tamanho 37 e integração Mercado Pago Checkout Pro.
+
+---
+
+## 5. Relatório da Bateria de Testes Obrigatórios (Prompt 5)
+
+| ID | Cenário de Teste | Resultado | Detalhes |
+|---|---|---|---|
+| **T01** | Abrir o menu Todos os Tênis | ✅ APROVADO | Menu e estrutura dropdown confirmados no Header. |
+| **T02** | Confirmar que Corrida de Rua não aparece | ✅ APROVADO | Opção removida sem deixar lacunas no layout. |
+| **T03** | Confirmar que as demais opções continuam funcionando | ✅ APROVADO | 5 opções ativas (Ver Todos, Treino, Casual, Maratona, Ofertas). |
+| **T04** | Abrir diferentes produtos | ✅ APROVADO | Carregamento validado no Supabase para múltiplos calçados. |
+| **T05** | Confirmar que a numeração começa em 37 | ✅ APROVADO | Todas as grades de tamanho iniciam em 37. |
+| **T06** | Confirmar que a sequência termina em 45 | ✅ APROVADO | Sequência 37-38-39-40-41-42-43-44-45 confirmada. |
+| **T07** | Testar a seleção do tamanho 37 | ✅ APROVADO | Seleção visual e lógica de primeiro disponível funcionando. |
+| **T08** | Testar um produto sem estoque no tamanho 37 | ✅ APROVADO | Botão desabilitado (`disabled`) e indisponível para compra. |
+| **T09** | Cadastrar novo produto com tamanho 37 | ✅ APROVADO | Grade padrão com tamanho 37 inicializada automaticamente. |
+| **T10** | Editar produto existente e testar numeração | ✅ APROVADO | Mapeamento completo 37 a 45 na edição administrativa. |
+| **T11** | Adicionar tênis tamanho 37 ao carrinho | ✅ APROVADO | Variante com tamanho 37 preservada no carrinho. |
+| **T12** | Confirmar que o checkout mantém numeração | ✅ APROVADO | Checkout e pedido persistem tamanho 37 no banco. |
+
+**Resultado:** 12 de 12 testes aprovados (100% de conformidade).
+
+---
+
+## 6. Arquivos Modificados e Criados (Prompt 5)
+
+### Arquivos Modificados:
+- `components/header/Header.tsx` (Remoção da opção Corrida de Rua do dropdown Todos os Tênis)
+- `components/product/ProductFilters.tsx` (Adição do tamanho 37 no filtro de calçados masculinos)
+- `app/produto/[slug]/page.tsx` (Adição do tamanho 37 e 45 na tabela do guia de medidas)
+- `WHITE_WOLF_PROGRESS.md` (Atualização com execução e relatório do Prompt 5)
+
+### Arquivos Criados:
+- `scripts/check_sizes.js` (Verificação de variantes no banco de dados)
+- `scripts/test_prompt5.js` (Bateria dos 12 testes automatizados do Prompt 5)
+- `scripts/test_prompt5_results.json` (Resultado dos testes em JSON)
+
+---
+
+## 7. Como Ativar Pagamentos Reais em Produção
 
 ### Arquivos Modificados:
 - `components/product/ProductCard.tsx` (Remoção do hover de numeração rápida)

@@ -135,9 +135,6 @@ export function Header() {
               <Link href="/produtos" className="block text-white hover:text-accent font-mono text-xs py-1.5 transition-colors font-bold">
                 👟 Ver Todos os Calçados
               </Link>
-              <Link href="/produtos?sport=corrida" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1.5 transition-colors">
-                Corrida de Rua
-              </Link>
               <Link href="/produtos?sport=academia" className="block text-wolf-300 hover:text-accent font-mono text-xs py-1.5 transition-colors">
                 Treino &amp; Academia
               </Link>

@@ -436,6 +436,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-wolf-900">
+                <tr><td className="py-2">37</td><td>24.5 cm</td></tr>
                 <tr><td className="py-2">38</td><td>25.0 cm</td></tr>
                 <tr><td className="py-2">39</td><td>25.5 cm</td></tr>
                 <tr><td className="py-2">40</td><td>26.5 cm</td></tr>
@@ -443,6 +444,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                 <tr><td className="py-2">42</td><td>28.0 cm</td></tr>
                 <tr><td className="py-2">43</td><td>29.0 cm</td></tr>
                 <tr><td className="py-2">44</td><td>30.0 cm</td></tr>
+                <tr><td className="py-2">45</td><td>30.5 cm</td></tr>
               </tbody>
             </table>
           </div>

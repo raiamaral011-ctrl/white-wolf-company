@@ -11,8 +11,8 @@ interface ProductFiltersProps {
   onReset: () => void;
 }
 
-// Full masculine shoe sizes from 38 to 45
-const MALE_SIZES = ['38', '39', '40', '41', '42', '43', '44', '45'];
+// Full masculine shoe sizes from 37 to 45
+const MALE_SIZES = ['37', '38', '39', '40', '41', '42', '43', '44', '45'];
 
 const PRICE_RANGES = [
   { label: 'Até R$ 300', min: undefined, max: 300 },

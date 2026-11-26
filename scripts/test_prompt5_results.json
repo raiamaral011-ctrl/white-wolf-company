@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-11-26T13:05:35.787Z",
+  "results": [
+    {
+      "id": "T01_MENU_EXISTS",
+      "name": "Abrir o menu Todos os Tênis",
+      "passed": true,
+      "details": "Menu Todos os Tênis e estrutura dropdown encontrados no Header."
+    },
+    {
+      "id": "T02_CORRIDA_REMOVED",
+      "name": "Confirmar que Corrida de Rua não aparece",
+      "passed": true,
+      "details": "Opção \"Corrida de Rua\" e parâmetro sport=corrida removidos com sucesso do menu."
+    },
+    {
+      "id": "T03_OTHER_OPTIONS_PRESERVED",
+      "name": "Confirmar que as demais opções continuam funcionando",
+      "passed": true,
+      "details": "Todas as 5 opções restantes confirmadas e ativas: Ver Todos, Treino & Academia, Casual & Lifestyle, Tênis de Maratona e Ofertas."
+    },
+    {
+      "id": "T04_LOAD_DIFFERENT_PRODUCTS",
+      "name": "Abrir diferentes produtos",
+      "passed": true,
+      "details": "Consulta com sucesso a 5 produtos distintos no banco: Air Max 90 Preto, Tênis PUMA-180, tenis puma 180, Chinelo Nike Victori One, Tênis Smash v2."
+    },
+    {
+      "id": "T05_SIZES_START_AT_37",
+      "name": "Confirmar que a numeração começa em 37",
+      "passed": true,
+      "details": "Todas as constantes de numeração (página do produto, filtros do catálogo, novo produto e edição admin) iniciam em 37."
+    },
+    {
+      "id": "T06_SEQUENCE_ENDS_AT_45",
+      "name": "Confirmar que a sequência termina em 45",
+      "passed": true,
+      "details": "Sequência exata 37-38-39-40-41-42-43-44-45 confirmada: [\"37\",\"38\",\"39\",\"40\",\"41\",\"42\",\"43\",\"44\",\"45\"]."
+    },
+    {
+      "id": "T07_SIZE_37_SELECTABLE",
+      "name": "Testar a seleção do tamanho 37",
+      "passed": true,
+      "details": "Lógica de seleção ativa: tamanho 37 selecionável quando disponível, com feedback visual de selecionado."
+    },
+    {
+      "id": "T08_OUT_OF_STOCK_DISABLED",
+      "name": "Testar um produto sem estoque no tamanho 37",
+      "passed": true,
+      "details": "Tamanho com estoque zero fica desabilitado (disabled={varOutOfStock}), sem permitir seleção ou compra."
+    },
+    {
+      "id": "T09_NEW_PRODUCT_AUTO_37",
+      "name": "Cadastrar um novo produto e verificar se o tamanho 37 aparece automaticamente",
+      "passed": true,
+      "details": "No formulário de novo produto, variante 37 é inicializada automaticamente com estoque e ativação configuráveis."
+    },
+    {
+      "id": "T10_EDIT_PRODUCT_SIZES",
+      "name": "Editar um produto existente e testar a numeração",
+      "passed": true,
+      "details": "Formulário de edição mapeia toda a grade DEFAULT_SIZES (37-45) para qualquer produto existente."
+    },
+    {
+      "id": "T11_ADD_SIZE_37_TO_CART",
+      "name": "Adicionar um tênis tamanho 37 ao carrinho, quando disponível",
+      "passed": true,
+      "details": "Adição ao carrinho passa variante com tamanho 37 selecionado (size: selectedSize) e página do carrinho exibe item.variant.size."
+    },
+    {
+      "id": "T12_CHECKOUT_PRESERVES_SIZE",
+      "name": "Confirmar que o checkout mantém a numeração correta",
+      "passed": true,
+      "details": "Checkout exibe \"Tam: {it.variant.size}\" e API /api/checkout persiste size no banco de dados Supabase."
+    }
+  ]
+}
